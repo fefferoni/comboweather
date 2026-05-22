@@ -1,0 +1,50 @@
+{
+  "approvedTime": "2026-05-22T10:00:00Z",
+  "referenceTime": "2026-05-22T09:00:00Z",
+  "geometry": { "type": "Point", "coordinates": [[18.07, 59.33]] },
+  "timeSeries": [
+    {
+      "validTime": "2026-05-22T11:00:00Z",
+      "parameters": [
+        { "name": "t",       "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [12.4] },
+        { "name": "ws",      "levelType": "hl", "level": 10, "unit": "m/s",      "values": [3.2] },
+        { "name": "wd",      "levelType": "hl", "level": 10, "unit": "degree",   "values": [200] },
+        { "name": "pmean",   "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
+        { "name": "Wsymb2",  "levelType": "hl", "level": 0,  "unit": "category", "values": [3] },
+        { "name": "tcc_mean","levelType": "hl", "level": 0,  "unit": "octas",    "values": [4] },
+        { "name": "msl",     "levelType": "hl", "level": 0,  "unit": "hPa",      "values": [1013.2] },
+        { "name": "r",       "levelType": "hl", "level": 2,  "unit": "percent",  "values": [62] }
+      ]
+    },
+    {
+      "validTime": "2026-05-22T14:00:00Z",
+      "parameters": [
+        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [15.1] },
+        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [4.0] },
+        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [210] },
+        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
+        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [3] }
+      ]
+    },
+    {
+      "validTime": "2026-05-22T20:00:00Z",
+      "parameters": [
+        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [10.6] },
+        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [2.8] },
+        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [180] },
+        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.3] },
+        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [9] }
+      ]
+    },
+    {
+      "validTime": "2026-05-23T03:00:00Z",
+      "parameters": [
+        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [7.2] },
+        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [2.1] },
+        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [170] },
+        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
+        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [5] }
+      ]
+    }
+  ]
+}

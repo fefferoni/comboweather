@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: ComboWeather API — v0.1 walking skeleton (SMHI only).
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+  SentryDsn:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Optional Sentry DSN; leave blank to disable.
+  BudgetEmail:
+    Type: String
+    Default: ""
+    Description: Email to receive €10/€30/€100 spend alerts. Required unless this stack runs in a sandbox account where billing alarms are not needed.
+
+Conditions:
+  HasBudgetEmail: !Not [!Equals [!Ref BudgetEmail, ""]]
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures: [arm64]
+    MemorySize: 512
+    Timeout: 10
+    Tracing: Active
+    Environment:
+      Variables:
+        STAGE: !Ref Stage
+        SENTRY_DSN: !Ref SentryDsn
+        FORECASTS_TABLE: !Ref ForecastsTable
+        NODE_OPTIONS: "--enable-source-maps"
+
+Resources:
+
+  ForecastsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "comboweather-forecasts-${Stage}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+
+  ForecastApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: ["GET", "OPTIONS"]
+        AllowHeaders: ["Content-Type", "X-Client-Id", "X-Client-Platform", "X-App-Version"]
+        MaxAge: 300
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
+
+  ForecastFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "comboweather-forecast-${Stage}"
+      Handler: forecast.handler
+      CodeUri: ../apps/api/
+      ReservedConcurrentExecutions: 50
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ForecastsTable
+      Events:
+        Forecast:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ForecastApi
+            Method: GET
+            Path: /forecast
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Minify: true
+        OutExtension:
+          - .js=.mjs
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/forecast.ts
+        External:
+          - "@aws-sdk/*"
+        Banner:
+          js: "import{createRequire as r}from 'node:module';const require=r(import.meta.url);"
+
+  ForecastLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ForecastFunction}"
+      RetentionInDays: 14
+
+  Budget10:
+    Type: AWS::Budgets::Budget
+    Condition: HasBudgetEmail
+    Properties:
+      Budget:
+        BudgetName: !Sub "comboweather-${Stage}-10eur"
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: 10
+          Unit: EUR
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+  Budget30:
+    Type: AWS::Budgets::Budget
+    Condition: HasBudgetEmail
+    Properties:
+      Budget:
+        BudgetName: !Sub "comboweather-${Stage}-30eur"
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: 30
+          Unit: EUR
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+  Budget100:
+    Type: AWS::Budgets::Budget
+    Condition: HasBudgetEmail
+    Properties:
+      Budget:
+        BudgetName: !Sub "comboweather-${Stage}-100eur"
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: 100
+          Unit: EUR
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+Outputs:
+  ApiBaseUrl:
+    Description: Base URL of the HTTP API
+    Value: !Sub "https://${ForecastApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ForecastsTableName:
+    Description: DynamoDB table for cached forecasts
+    Value: !Ref ForecastsTable

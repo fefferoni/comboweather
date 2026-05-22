@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.aws-sam/
+samconfig.local.toml
+*.log
+.env
+.env.*
+!.env.example
+coverage/
+.DS_Store
+*.tsbuildinfo
+.idea/
+.vscode/

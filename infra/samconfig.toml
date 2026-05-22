@@ -1,0 +1,25 @@
+version = 0.1
+
+[default.global.parameters]
+stack_name = "comboweather-dev"
+
+[default.deploy.parameters]
+region = "eu-north-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+parameter_overrides = "Stage=dev"
+
+[default.build.parameters]
+parallel = true
+
+[default.local_start_api.parameters]
+warm_containers = "LAZY"
+
+[prod.deploy.parameters]
+stack_name = "comboweather-prod"
+region = "eu-north-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+parameter_overrides = "Stage=prod"
