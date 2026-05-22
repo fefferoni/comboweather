@@ -8,27 +8,40 @@ import type {
 } from "@combo/shared";
 import { roundCoord } from "../lib/geo.js";
 
+// SMHI deprecated the legacy pmp3g/v2 endpoint on 2026-03-31; current
+// replacement is snow1g/v1. Parameter names are human-readable strings
+// (e.g. `air_temperature` instead of `t`) and the per-hour bag lives under
+// `data` rather than a flat `parameters[]` list.
+//
+// Docs: https://opendata.smhi.se/apidocs/metfcst/
 const SMHI_BASE =
-  "https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point";
+  "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point";
 
 const SMHI_ATTRIBUTION = "https://www.smhi.se/data/oppna-data/villkor-for-anvandning";
 
-interface SmhiParameter {
-  name: string;
-  levelType: string;
-  level: number;
-  unit: string;
-  values: number[];
+export interface SmhiPointData {
+  air_temperature?: number;
+  wind_speed?: number;
+  wind_from_direction?: number;
+  precipitation_amount_mean?: number;
+  probability_of_precipitation?: number;
+  relative_humidity?: number;
+  air_pressure_at_mean_sea_level?: number;
+  cloud_area_fraction?: number;
+  symbol_code?: number;
+  [key: string]: number | undefined;
 }
 
-interface SmhiTimeSeries {
-  validTime: string;
-  parameters: SmhiParameter[];
+export interface SmhiTimeSeries {
+  time: string;
+  intervalParametersStartTime?: string;
+  data: SmhiPointData;
 }
 
 export interface SmhiPointResponse {
-  approvedTime: string;
+  createdTime: string;
   referenceTime: string;
+  geometry: { type: "Point"; coordinates: [number, number] };
   timeSeries: SmhiTimeSeries[];
 }
 
@@ -41,7 +54,7 @@ export async function fetchSmhi(
   const url = `${SMHI_BASE}/lon/${roundCoord(lon).toFixed(2)}/lat/${roundCoord(lat).toFixed(2)}/data.json`;
   const fetchImpl = init?.fetch ?? fetch;
   const res = await fetchImpl(url, {
-    headers: { "User-Agent": "ComboWeather/0.1 (+https://github.com/spfeffer/comboweather)" },
+    headers: { "User-Agent": "ComboWeather/0.1 (+https://github.com/fefferoni/comboweather)" },
   });
   if (!res.ok) {
     throw new Error(`SMHI fetch failed: ${res.status} ${res.statusText}`);
@@ -68,56 +81,55 @@ export function parseSmhi(raw: SmhiPointResponse, fetchedAt: string): ProviderFo
   };
 }
 
-function paramValue(entry: SmhiTimeSeries, name: string): number | undefined {
-  const p = entry.parameters.find((x) => x.name === name);
-  return p?.values[0];
-}
-
-function requireParam(entry: SmhiTimeSeries, name: string): number {
-  const v = paramValue(entry, name);
+function requireField(data: SmhiPointData, name: keyof SmhiPointData): number {
+  const v = data[name];
   if (v === undefined) {
-    throw new Error(`SMHI timeSeries entry missing parameter "${name}"`);
+    throw new Error(`SMHI timeSeries entry missing parameter "${String(name)}"`);
   }
   return v;
 }
 
-function toWind(entry: SmhiTimeSeries): Wind {
+function toWind(data: SmhiPointData): Wind {
   return {
-    speed: requireParam(entry, "ws"),
-    direction: requireParam(entry, "wd"),
+    speed: requireField(data, "wind_speed"),
+    direction: requireField(data, "wind_from_direction"),
   };
 }
 
-function toPrecip(entry: SmhiTimeSeries): Precipitation {
-  // SMHI provides mean precip in mm/h (kg/m²/h). Probability is not exposed
-  // on the point forecast endpoint — only via the analysis forecast endpoint.
-  return { amount: requireParam(entry, "pmean") };
+function toPrecip(data: SmhiPointData): Precipitation {
+  const out: Precipitation = { amount: requireField(data, "precipitation_amount_mean") };
+  // probability_of_precipitation is 0-100; normalize to 0-1.
+  if (data.probability_of_precipitation !== undefined) {
+    out.probability = data.probability_of_precipitation / 100;
+  }
+  return out;
 }
 
 function toCurrentConditions(entry: SmhiTimeSeries): CurrentConditions {
+  const d = entry.data;
   const conditions: CurrentConditions = {
-    time: entry.validTime,
-    temperature: requireParam(entry, "t"),
-    precipitation: toPrecip(entry),
-    wind: toWind(entry),
-    symbol: wsymbToSymbol(requireParam(entry, "Wsymb2")),
+    time: entry.time,
+    temperature: requireField(d, "air_temperature"),
+    precipitation: toPrecip(d),
+    wind: toWind(d),
+    symbol: symbolCodeToCanonical(requireField(d, "symbol_code")),
   };
-  const tcc = paramValue(entry, "tcc_mean");
-  if (tcc !== undefined) conditions.cloudCover = tcc / 8;
-  const pres = paramValue(entry, "msl");
-  if (pres !== undefined) conditions.pressure = pres;
-  const rh = paramValue(entry, "r");
-  if (rh !== undefined) conditions.humidity = rh / 100;
+  if (d.cloud_area_fraction !== undefined) conditions.cloudCover = d.cloud_area_fraction / 100;
+  if (d.air_pressure_at_mean_sea_level !== undefined) {
+    conditions.pressure = d.air_pressure_at_mean_sea_level;
+  }
+  if (d.relative_humidity !== undefined) conditions.humidity = d.relative_humidity / 100;
   return conditions;
 }
 
 function toHourPoint(entry: SmhiTimeSeries): HourPoint {
+  const d = entry.data;
   return {
-    time: entry.validTime,
-    temperature: requireParam(entry, "t"),
-    precipitation: toPrecip(entry),
-    wind: toWind(entry),
-    symbol: wsymbToSymbol(requireParam(entry, "Wsymb2")),
+    time: entry.time,
+    temperature: requireField(d, "air_temperature"),
+    precipitation: toPrecip(d),
+    wind: toWind(d),
+    symbol: symbolCodeToCanonical(requireField(d, "symbol_code")),
   };
 }
 
@@ -171,9 +183,11 @@ function dominantSymbol(counts: Map<string, number>): string {
 }
 
 /**
- * Placeholder Wsymb2 → canonical key mapping. The real SMHI Wsymb2 → MET
- * `symbol_code` mapping lands in v0.2 with packages/shared/icon-mapping.
+ * Placeholder SMHI symbol_code → canonical key mapping. SNOW1g's symbol_code
+ * is its own integer scheme (distinct from the legacy Wsymb2). Real mapping
+ * to MET Norway's `symbol_code` string vocabulary lands in v0.2 with
+ * packages/shared/icon-mapping.
  */
-function wsymbToSymbol(code: number): string {
-  return `wsymb2_${code}`;
+function symbolCodeToCanonical(code: number): string {
+  return `smhi_${code}`;
 }

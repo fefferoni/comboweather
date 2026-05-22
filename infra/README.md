@@ -39,24 +39,39 @@ curl 'http://localhost:3000/forecast?lat=59.33&lon=18.07'
 
 ## Deploy
 
-First-time guided deploy writes the `samconfig.toml` defaults; subsequent
-deploys use them.
+There are **two stacks**:
+
+1. **`template.yaml`** — the API: HTTP API Gateway, Lambda, DynamoDB. Deploys to `eu-north-1` (Stockholm).
+2. **`budgets.yaml`** — the monthly spend alarms ($10 / $30 / $100). Deploys to `us-east-1` because AWS Budgets is a global service that CloudFormation only supports there.
+
+### Main stack (eu-north-1)
 
 ```bash
+pnpm --filter @combo/api build:lambda
 sam build
 sam deploy --guided                         # first time only
 sam deploy                                  # subsequent dev deploys
 sam deploy --config-env prod                # prod environment
 ```
 
-Pass a real email to receive the budget alarms:
+Optional Sentry DSN:
 
 ```bash
-sam deploy --parameter-overrides "BudgetEmail=you@example.com SentryDsn=https://..."
+sam deploy --parameter-overrides "Stage=dev SentryDsn=https://..."
 ```
 
-Without `BudgetEmail`, the three Budgets resources are skipped (handy for
-sandbox accounts).
+### Budgets stack (us-east-1, one-shot)
+
+```bash
+aws cloudformation deploy \
+  --template-file budgets.yaml \
+  --stack-name comboweather-budgets \
+  --region us-east-1 \
+  --parameter-overrides "Stage=dev BudgetEmail=you@example.com"
+```
+
+Currency is **USD** — AWS Budgets uses the account's billing currency, and
+swapping that to EUR would mean a billing-prefs change in the account.
 
 ## Stack outputs
 

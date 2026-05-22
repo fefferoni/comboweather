@@ -12,13 +12,6 @@ Parameters:
     Default: ""
     NoEcho: true
     Description: Optional Sentry DSN; leave blank to disable.
-  BudgetEmail:
-    Type: String
-    Default: ""
-    Description: Email to receive €10/€30/€100 spend alerts. Required unless this stack runs in a sandbox account where billing alarms are not needed.
-
-Conditions:
-  HasBudgetEmail: !Not [!Equals [!Ref BudgetEmail, ""]]
 
 Globals:
   Function:
@@ -96,76 +89,9 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${ForecastFunction}"
       RetentionInDays: 14
 
-  Budget10:
-    Type: AWS::Budgets::Budget
-    Condition: HasBudgetEmail
-    Properties:
-      Budget:
-        BudgetName: !Sub "comboweather-${Stage}-10eur"
-        BudgetType: COST
-        TimeUnit: MONTHLY
-        BudgetLimit:
-          Amount: 10
-          Unit: EUR
-      NotificationsWithSubscribers:
-        - Notification:
-            NotificationType: ACTUAL
-            ComparisonOperator: GREATER_THAN
-            Threshold: 100
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: EMAIL
-              Address: !Ref BudgetEmail
-
-  Budget30:
-    Type: AWS::Budgets::Budget
-    Condition: HasBudgetEmail
-    Properties:
-      Budget:
-        BudgetName: !Sub "comboweather-${Stage}-30eur"
-        BudgetType: COST
-        TimeUnit: MONTHLY
-        BudgetLimit:
-          Amount: 30
-          Unit: EUR
-      NotificationsWithSubscribers:
-        - Notification:
-            NotificationType: ACTUAL
-            ComparisonOperator: GREATER_THAN
-            Threshold: 100
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: EMAIL
-              Address: !Ref BudgetEmail
-
-  Budget100:
-    Type: AWS::Budgets::Budget
-    Condition: HasBudgetEmail
-    Properties:
-      Budget:
-        BudgetName: !Sub "comboweather-${Stage}-100eur"
-        BudgetType: COST
-        TimeUnit: MONTHLY
-        BudgetLimit:
-          Amount: 100
-          Unit: EUR
-      NotificationsWithSubscribers:
-        - Notification:
-            NotificationType: ACTUAL
-            ComparisonOperator: GREATER_THAN
-            Threshold: 100
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: EMAIL
-              Address: !Ref BudgetEmail
-        - Notification:
-            NotificationType: FORECASTED
-            ComparisonOperator: GREATER_THAN
-            Threshold: 100
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - SubscriptionType: EMAIL
-              Address: !Ref BudgetEmail
+# NOTE: AWS Budgets is a global service that CloudFormation only supports in
+# us-east-1. The €10/€30/€100 budget alarms live in a separate stack —
+# infra/budgets.yaml — deployed to us-east-1. See infra/README.md.
 
 Outputs:
   ApiBaseUrl:

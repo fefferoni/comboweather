@@ -1,50 +1,58 @@
 {
-  "approvedTime": "2026-05-22T10:00:00Z",
-  "referenceTime": "2026-05-22T09:00:00Z",
-  "geometry": { "type": "Point", "coordinates": [[18.07, 59.33]] },
+  "createdTime": "2026-05-22T17:00:00Z",
+  "referenceTime": "2026-05-22T16:00:00Z",
+  "geometry": { "type": "Point", "coordinates": [18.07, 59.33] },
   "timeSeries": [
     {
-      "validTime": "2026-05-22T11:00:00Z",
-      "parameters": [
-        { "name": "t",       "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [12.4] },
-        { "name": "ws",      "levelType": "hl", "level": 10, "unit": "m/s",      "values": [3.2] },
-        { "name": "wd",      "levelType": "hl", "level": 10, "unit": "degree",   "values": [200] },
-        { "name": "pmean",   "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
-        { "name": "Wsymb2",  "levelType": "hl", "level": 0,  "unit": "category", "values": [3] },
-        { "name": "tcc_mean","levelType": "hl", "level": 0,  "unit": "octas",    "values": [4] },
-        { "name": "msl",     "levelType": "hl", "level": 0,  "unit": "hPa",      "values": [1013.2] },
-        { "name": "r",       "levelType": "hl", "level": 2,  "unit": "percent",  "values": [62] }
-      ]
+      "time": "2026-05-22T17:00:00Z",
+      "intervalParametersStartTime": "2026-05-22T16:00:00Z",
+      "data": {
+        "air_temperature": 20.3,
+        "wind_speed": 4.3,
+        "wind_from_direction": 267,
+        "precipitation_amount_mean": 0.0,
+        "probability_of_precipitation": 3,
+        "cloud_area_fraction": 12,
+        "air_pressure_at_mean_sea_level": 1020.6,
+        "relative_humidity": 52,
+        "symbol_code": 1
+      }
     },
     {
-      "validTime": "2026-05-22T14:00:00Z",
-      "parameters": [
-        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [15.1] },
-        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [4.0] },
-        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [210] },
-        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
-        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [3] }
-      ]
+      "time": "2026-05-22T20:00:00Z",
+      "intervalParametersStartTime": "2026-05-22T19:00:00Z",
+      "data": {
+        "air_temperature": 16.4,
+        "wind_speed": 3.1,
+        "wind_from_direction": 240,
+        "precipitation_amount_mean": 0.0,
+        "probability_of_precipitation": 5,
+        "symbol_code": 2
+      }
     },
     {
-      "validTime": "2026-05-22T20:00:00Z",
-      "parameters": [
-        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [10.6] },
-        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [2.8] },
-        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [180] },
-        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.3] },
-        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [9] }
-      ]
+      "time": "2026-05-22T23:00:00Z",
+      "intervalParametersStartTime": "2026-05-22T22:00:00Z",
+      "data": {
+        "air_temperature": 11.8,
+        "wind_speed": 2.4,
+        "wind_from_direction": 210,
+        "precipitation_amount_mean": 0.4,
+        "probability_of_precipitation": 35,
+        "symbol_code": 9
+      }
     },
     {
-      "validTime": "2026-05-23T03:00:00Z",
-      "parameters": [
-        { "name": "t",      "levelType": "hl", "level": 2,  "unit": "Cel",      "values": [7.2] },
-        { "name": "ws",     "levelType": "hl", "level": 10, "unit": "m/s",      "values": [2.1] },
-        { "name": "wd",     "levelType": "hl", "level": 10, "unit": "degree",   "values": [170] },
-        { "name": "pmean",  "levelType": "hl", "level": 0,  "unit": "kg/m2/h",  "values": [0.0] },
-        { "name": "Wsymb2", "levelType": "hl", "level": 0,  "unit": "category", "values": [5] }
-      ]
+      "time": "2026-05-23T05:00:00Z",
+      "intervalParametersStartTime": "2026-05-23T04:00:00Z",
+      "data": {
+        "air_temperature": 9.2,
+        "wind_speed": 2.0,
+        "wind_from_direction": 195,
+        "precipitation_amount_mean": 0.0,
+        "probability_of_precipitation": 10,
+        "symbol_code": 5
+      }
     }
   ]
 }
