@@ -13,11 +13,16 @@ table, and three monthly budget alarms (€10, €30, €100).
 
 ## Local development
 
+The Lambda is pre-bundled by esbuild into `apps/api/.lambda-build/` before
+SAM packages it. That sidesteps SAM's npm-based builder choking on pnpm's
+`workspace:*` protocol when resolving the `@combo/shared` dependency.
+
 ```bash
-pnpm install               # from repo root, once
+pnpm install                              # once
+pnpm --filter @combo/api build:lambda     # bundle the Lambda (rerun on src changes)
 cd infra
-sam build                  # transpiles + bundles via esbuild
-sam local start-api        # boots API GW + Lambda locally on :3000
+sam build                                 # packages the prebuilt bundle
+sam local start-api                       # boots API GW + Lambda locally on :3000
 ```
 
 Then in another shell:

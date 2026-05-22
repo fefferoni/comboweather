@@ -33,3 +33,6 @@ jobs:
 
       - name: Test (with coverage gates)
         run: pnpm test
+
+      - name: Smoke-bundle Lambda
+        run: pnpm --filter @combo/api build:lambda

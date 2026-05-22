@@ -22,7 +22,7 @@ Conditions:
 
 Globals:
   Function:
-    Runtime: nodejs20.x
+    Runtime: nodejs24.x
     Architectures: [arm64]
     MemorySize: 512
     Timeout: 10
@@ -75,7 +75,9 @@ Resources:
     Properties:
       FunctionName: !Sub "comboweather-forecast-${Stage}"
       Handler: forecast.handler
-      CodeUri: ../apps/api/
+      # Prebuilt by `pnpm --filter @combo/api build:lambda`. Self-contained
+      # bundle (no workspace refs, no deps to install) so SAM packages it as-is.
+      CodeUri: ../apps/api/.lambda-build/
       ReservedConcurrentExecutions: 50
       Policies:
         - DynamoDBCrudPolicy:
@@ -87,21 +89,6 @@ Resources:
             ApiId: !Ref ForecastApi
             Method: GET
             Path: /forecast
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Format: esm
-        Minify: true
-        OutExtension:
-          - .js=.mjs
-        Target: es2022
-        Sourcemap: true
-        EntryPoints:
-          - src/handlers/forecast.ts
-        External:
-          - "@aws-sdk/*"
-        Banner:
-          js: "import{createRequire as r}from 'node:module';const require=r(import.meta.url);"
 
   ForecastLogGroup:
     Type: AWS::Logs::LogGroup
