@@ -96,9 +96,10 @@ jobs:
             --parameter-overrides \
               "Stage=dev SentryDsn=${{ secrets.SENTRY_DSN }}"
 
-      # Read the live API URL out of the stack's outputs, then hit /forecast to
-      # confirm the deploy actually serves traffic — not just that CloudFormation
-      # accepted the change set.
+      # Read the live API URL out of the stack's outputs, then hit /forecast and
+      # check that the combo really has all three providers. A 200 alone isn't
+      # enough — the handler tolerates per-provider failures and would still
+      # return 200 with only 1 or 2 providers if one was silently broken.
       - name: Smoke-test the live API
         run: |
           API_URL=$(aws cloudformation describe-stacks \
@@ -106,4 +107,11 @@ jobs:
             --query 'Stacks[0].Outputs[?OutputKey==`ApiBaseUrl`].OutputValue' \
             --output text)
           echo "Probing $API_URL/forecast?lat=59.33&lon=18.07"
-          curl --fail --silent --show-error "$API_URL/forecast?lat=59.33&lon=18.07" > /dev/null
+          BODY=$(curl --fail --silent --show-error "$API_URL/forecast?lat=59.33&lon=18.07")
+          COUNT=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin)['combo']['providerCount'])")
+          PROVIDERS=$(echo "$BODY" | python3 -c "import json,sys; print(','.join(sorted(json.load(sys.stdin)['providers'].keys())))")
+          echo "providerCount=$COUNT providers=$PROVIDERS"
+          if [ "$COUNT" != "3" ]; then
+            echo "::error::Expected providerCount=3, got $COUNT (providers: $PROVIDERS)"
+            exit 1
+          fi
