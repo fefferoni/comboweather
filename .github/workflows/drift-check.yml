@@ -1,9 +1,9 @@
 name: Drift check
 
-# Hit every upstream provider through our production parsers once a day.
-# If a provider changes its response shape, the parser will throw and this
-# workflow opens a tracking issue. See apps/api/tests/drift/live-providers.test.ts
-# for what we actually assert.
+# Hits every upstream provider through our production parsers once a day.
+# If a provider quietly changes its response shape, our parser will throw
+# and this workflow opens a tracking issue so we notice within 24 h.
+# See apps/api/tests/drift/live-providers.test.ts for what we assert.
 
 on:
   schedule:
@@ -11,6 +11,7 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# `issues: write` is what lets the github-script step open the drift issue.
 permissions:
   contents: read
   issues: write
@@ -20,20 +21,31 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      # Pull the repo so we can run the workspace tests.
+      - name: Check out the repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      # Make the `pnpm` command available.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9.12.0
 
-      - uses: actions/setup-node@v4
+      # Install Node.js; cache pnpm's store between runs.
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
+      # Pull every workspace's dependencies, lockfile pinned.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Run only the drift-suite Vitest files against the real provider APIs.
+      # RUN_LIVE_DRIFT=1 is what un-skips them — normal CI never runs them.
+      # We capture both the exit code and the test output so the next step
+      # can decide whether to open an issue and what to put in it.
       - name: Run live provider drift tests
         id: drift
         env:
@@ -43,6 +55,9 @@ jobs:
           pnpm --filter @combo/api exec vitest run tests/drift --no-coverage 2>&1 | tee drift-output.txt
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 
+      # If any drift test failed, open a GitHub Issue summarizing what broke.
+      # Dedup: if an open issue already exists with today's title, skip — we
+      # don't want the same drift triggering daily-duplicate issues.
       - name: Open issue on drift detection
         if: steps.drift.outputs.exit_code != '0'
         uses: actions/github-script@v7
@@ -79,6 +94,9 @@ jobs:
               ].join('\n'),
             });
 
+      # The previous step uses `set +e` so test failures don't stop the job
+      # before the issue gets opened. Re-fail the run here so the workflow
+      # status badge turns red and we see it in the Actions list.
       - name: Re-fail the job so the run is red
         if: steps.drift.outputs.exit_code != '0'
         run: exit 1

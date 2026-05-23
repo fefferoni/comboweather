@@ -1,6 +1,6 @@
 name: Deploy API
 
-# Deploys the SAM stack on every push to main. Uses GitHub OIDC to assume
+# Deploys the SAM stack to AWS on every push to main. Uses GitHub OIDC to assume
 # an AWS IAM role — no long-lived AWS access keys live in GitHub Secrets.
 #
 # One-time AWS setup is documented in infra/README.md. The role's trust
@@ -11,10 +11,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# GitHub Actions needs `id-token: write` to mint the OIDC token that AWS verifies
+# when we call sts:AssumeRoleWithWebIdentity.
 permissions:
   contents: read
   id-token: write
 
+# Don't run two deploys in parallel — let an in-flight one finish before starting
+# the next, so we never race against the same CloudFormation stack.
 concurrency:
   group: deploy-api
   cancel-in-progress: false
@@ -27,43 +31,62 @@ jobs:
       AWS_REGION: eu-north-1
       SAM_CLI_TELEMETRY: "0"
     steps:
-      - uses: actions/checkout@v4
+      # Pull the repo's code onto the runner.
+      - name: Check out the repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      # Make the `pnpm` command available so we can run the workspace scripts.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9.12.0
 
-      - uses: actions/setup-node@v4
+      # Install Node.js. `cache: pnpm` reuses pnpm's store between runs.
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
+      # Pull every workspace's dependencies, with the lockfile pinned.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Rerun the same gates CI ran on the PR — last sanity check before we touch AWS.
       - name: Lint + typecheck + test
         run: |
           pnpm lint
           pnpm typecheck
           pnpm test
 
+      # Bundle the Lambda's TypeScript into one self-contained .mjs that SAM packages as-is.
       - name: Build Lambda bundle
         run: pnpm --filter @combo/api build:lambda
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      # Swap GitHub's OIDC token for short-lived AWS credentials by assuming the
+      # comboweather-github-deployer role. The role's permissions are scoped to
+      # comboweather-* resources in our two regions.
+      - name: Assume AWS deploy role via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GHA-comboweather-deploy
 
-      - uses: aws-actions/setup-sam@v2
+      # Install the AWS SAM CLI on the runner.
+      - name: Install AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
 
+      # `sam build` packages the prebuilt Lambda + template into .aws-sam/build.
       - name: SAM build
         working-directory: infra
         run: sam build
 
+      # Deploy the stack. `--no-confirm-changeset` skips the interactive prompt;
+      # `--no-fail-on-empty-changeset` lets the job succeed even when there's
+      # nothing new to ship (e.g. the README-only commit).
       - name: SAM deploy
         working-directory: infra
         run: |
@@ -73,6 +96,9 @@ jobs:
             --parameter-overrides \
               "Stage=dev SentryDsn=${{ secrets.SENTRY_DSN }}"
 
+      # Read the live API URL out of the stack's outputs, then hit /forecast to
+      # confirm the deploy actually serves traffic — not just that CloudFormation
+      # accepted the change set.
       - name: Smoke-test the live API
         run: |
           API_URL=$(aws cloudformation describe-stacks \
