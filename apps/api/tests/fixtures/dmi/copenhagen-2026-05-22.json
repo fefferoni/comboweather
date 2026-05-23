@@ -1,0 +1,63 @@
+{
+  "type": "Coverage",
+  "domain": {
+    "type": "Domain",
+    "domainType": "PointSeries",
+    "axes": {
+      "x": { "values": [12.57] },
+      "y": { "values": [55.68] },
+      "t": {
+        "values": [
+          "2026-05-22T17:00:00Z",
+          "2026-05-22T20:00:00Z",
+          "2026-05-22T23:00:00Z",
+          "2026-05-23T05:00:00Z"
+        ]
+      }
+    }
+  },
+  "ranges": {
+    "temperature-2m": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [20.1, 16.7, 12.0, 9.5]
+    },
+    "relative-humidity-2m": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [54, 70, 88, 90]
+    },
+    "wind-speed-10m": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [4.2, 3.0, 2.3, 1.9]
+    },
+    "wind-dir-10m": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [270, 244, 212, 200]
+    },
+    "total-precipitation": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [0, 0, 1.2, 0.1]
+    },
+    "fraction-of-cloud-cover": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [0.1, 0.6, 0.95, 0.92]
+    },
+    "pressure-sea-level": {
+      "type": "NdArray",
+      "axisNames": ["t"],
+      "shape": [4],
+      "values": [1020.0, 1019.2, 1018.4, 1018.0]
+    }
+  }
+}

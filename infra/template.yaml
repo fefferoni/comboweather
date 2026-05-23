@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: ComboWeather API — v0.1 walking skeleton (SMHI only).
+Description: ComboWeather API — v0.2 (SMHI + MET Norway + DMI, combine algorithm).
 
 Parameters:
   Stage:

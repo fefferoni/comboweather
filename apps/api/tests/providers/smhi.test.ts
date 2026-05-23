@@ -12,7 +12,7 @@ describe("parseSmhi (snow1g/v1)", () => {
       temperature: 20.3,
       precipitation: { amount: 0, probability: 0.03 },
       wind: { speed: 4.3, direction: 267 },
-      symbol: "smhi_1",
+      symbol: "clearsky_day",
       cloudCover: 0.12,
       pressure: 1020.6,
       humidity: 0.52,
@@ -22,12 +22,13 @@ describe("parseSmhi (snow1g/v1)", () => {
   it("emits one HourPoint per timeSeries entry", () => {
     const out = parseSmhi(fixture as SmhiPointResponse, FETCHED_AT);
     expect(out.hourly).toHaveLength(4);
+    // 23:00 UTC + SMHI code 9 = moderate rain showers → rainshowers_night.
     expect(out.hourly[2]).toEqual({
       time: "2026-05-22T23:00:00Z",
       temperature: 11.8,
       precipitation: { amount: 0.4, probability: 0.35 },
       wind: { speed: 2.4, direction: 210 },
-      symbol: "smhi_9",
+      symbol: "rainshowers_night",
     });
   });
 
@@ -40,14 +41,15 @@ describe("parseSmhi (snow1g/v1)", () => {
         tempMax: 20.3,
         // 0 + 0 + 0.4 — use closeTo to absorb floating-point noise.
         precipitation: { amount: expect.closeTo(0.4, 10) },
-        symbol: "smhi_1",
+        // Three distinct symbols, severity tiebreaker picks the rainshowers entry.
+        symbol: "rainshowers_night",
       },
       {
         date: "2026-05-23",
         tempMin: 9.2,
         tempMax: 9.2,
         precipitation: { amount: 0 },
-        symbol: "smhi_5",
+        symbol: "cloudy",
       },
     ]);
   });

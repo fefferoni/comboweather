@@ -1,5 +1,8 @@
 name: CI
 
+# Runs on every PR against main and on every push to main.
+# Job is fast (~22 s when warm) so it can gate every change.
+
 on:
   pull_request:
     branches: [main]
@@ -11,28 +14,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      # Pull the repo's code onto the runner so the rest of the job can see it.
+      - name: Check out the repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      # Make the `pnpm` command available — it's our package manager (faster than npm,
+      # and the only one that handles our `workspace:*` monorepo links).
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9.12.0
 
-      - uses: actions/setup-node@v4
+      # Install Node.js itself. `cache: pnpm` reuses pnpm's per-package store between runs
+      # so dependencies don't re-download every time.
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
+      # Pull every workspace's dependencies. `--frozen-lockfile` makes the job fail loudly
+      # if someone bumped a package version without checking in pnpm-lock.yaml.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Run ESLint across the api + shared source code.
       - name: Lint
         run: pnpm lint
 
+      # Compile every workspace with `tsc --noEmit` to catch type errors.
       - name: Typecheck
         run: pnpm typecheck
 
+      # Run Vitest in both workspaces. The `packages/shared/combine` module is gated at
+      # 100% line + branch coverage — the run fails if any line of the combine algorithm
+      # isn't exercised by a test.
       - name: Test (with coverage gates)
         run: pnpm test
 
+      # Build the Lambda bundle the same way SAM would package it. Catches missing imports
+      # or workspace-resolution issues before they show up at deploy time.
       - name: Smoke-bundle Lambda
         run: pnpm --filter @combo/api build:lambda
