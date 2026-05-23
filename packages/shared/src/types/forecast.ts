@@ -60,16 +60,65 @@ export interface ProviderForecast {
   attributionUrl: string;
 }
 
+/** Provider disagreement on the variables surfaced for the current hero card. */
+export interface CurrentSpread {
+  /** Celsius range across providers (max − min). */
+  temperature?: number;
+  /** m/s range. */
+  windSpeed?: number;
+  /** Degrees of separation between the two most-divergent providers (wrap-aware). */
+  windDirection?: number;
+  /** mm range. */
+  precipAmount?: number;
+  /** 0-1 range. */
+  precipProbability?: number;
+  /** 0-1 range. */
+  humidity?: number;
+  /** hPa range. */
+  pressure?: number;
+  /** 0-1 range. */
+  cloudCover?: number;
+}
+
+export interface HourlySpread {
+  temperature?: number;
+  windSpeed?: number;
+  windDirection?: number;
+  precipAmount?: number;
+  precipProbability?: number;
+}
+
+export interface DailySpread {
+  tempMin?: number;
+  tempMax?: number;
+  precipAmount?: number;
+}
+
 /** Per-timestep, per-variable spread used by the UI for "providers disagree" hints. */
 export interface ComboSpread {
-  /** For now: empty when only one provider is present. Tightened in v0.2. */
-  [key: string]: unknown;
+  current: CurrentSpread;
+  /** Same length and order as ComboForecast.hourly. */
+  hourly: HourlySpread[];
+  /** Same length and order as ComboForecast.daily. */
+  daily: DailySpread[];
+}
+
+export interface ComboCurrent extends CurrentConditions {
+  confidence: Confidence;
+}
+
+export interface ComboHourPoint extends HourPoint {
+  confidence: Confidence;
+}
+
+export interface ComboDayPoint extends DayPoint {
+  confidence: Confidence;
 }
 
 export interface ComboForecast {
-  current: CurrentConditions & { confidence: Confidence };
-  hourly: HourPoint[];
-  daily: DayPoint[];
+  current: ComboCurrent;
+  hourly: ComboHourPoint[];
+  daily: ComboDayPoint[];
   spread: ComboSpread;
   /** Number of providers fed into this combo. */
   providerCount: number;

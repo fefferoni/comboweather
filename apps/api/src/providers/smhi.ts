@@ -1,10 +1,12 @@
-import type {
-  CurrentConditions,
-  DayPoint,
-  HourPoint,
-  Precipitation,
-  ProviderForecast,
-  Wind,
+import {
+  smhiSymbolToMet,
+  symbolSeverity,
+  type CurrentConditions,
+  type DayPoint,
+  type HourPoint,
+  type Precipitation,
+  type ProviderForecast,
+  type Wind,
 } from "@combo/shared";
 import { roundCoord } from "../lib/geo.js";
 
@@ -112,7 +114,7 @@ function toCurrentConditions(entry: SmhiTimeSeries): CurrentConditions {
     temperature: requireField(d, "air_temperature"),
     precipitation: toPrecip(d),
     wind: toWind(d),
-    symbol: symbolCodeToCanonical(requireField(d, "symbol_code")),
+    symbol: smhiSymbolToMet(requireField(d, "symbol_code"), entry.time),
   };
   if (d.cloud_area_fraction !== undefined) conditions.cloudCover = d.cloud_area_fraction / 100;
   if (d.air_pressure_at_mean_sea_level !== undefined) {
@@ -129,7 +131,7 @@ function toHourPoint(entry: SmhiTimeSeries): HourPoint {
     temperature: requireField(d, "air_temperature"),
     precipitation: toPrecip(d),
     wind: toWind(d),
-    symbol: symbolCodeToCanonical(requireField(d, "symbol_code")),
+    symbol: smhiSymbolToMet(requireField(d, "symbol_code"), entry.time),
   };
 }
 
@@ -170,24 +172,18 @@ function aggregateDaily(hours: HourPoint[]): DayPoint[] {
   return days;
 }
 
+/**
+ * Mode with severity tiebreaker — same shape combine() uses across providers,
+ * but here it's picking the dominant symbol across hours within one day.
+ */
 function dominantSymbol(counts: Map<string, number>): string {
   let best: string | undefined;
   let bestCount = -1;
   for (const [sym, c] of counts) {
-    if (c > bestCount) {
+    if (c > bestCount || (c === bestCount && best !== undefined && symbolSeverity(sym) > symbolSeverity(best))) {
       best = sym;
       bestCount = c;
     }
   }
   return best!;
-}
-
-/**
- * Placeholder SMHI symbol_code → canonical key mapping. SNOW1g's symbol_code
- * is its own integer scheme (distinct from the legacy Wsymb2). Real mapping
- * to MET Norway's `symbol_code` string vocabulary lands in v0.2 with
- * packages/shared/icon-mapping.
- */
-function symbolCodeToCanonical(code: number): string {
-  return `smhi_${code}`;
 }

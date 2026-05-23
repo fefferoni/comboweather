@@ -1,0 +1,83 @@
+name: Deploy API
+
+# Deploys the SAM stack on every push to main. Uses GitHub OIDC to assume
+# an AWS IAM role — no long-lived AWS access keys live in GitHub Secrets.
+#
+# One-time AWS setup is documented in infra/README.md. The role's trust
+# policy must scope to `repo:fefferoni/comboweather:ref:refs/heads/main`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: eu-north-1
+      SAM_CLI_TELEMETRY: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint + typecheck + test
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+
+      - name: Build Lambda bundle
+        run: pnpm --filter @combo/api build:lambda
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GHA-comboweather-deploy
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: SAM build
+        working-directory: infra
+        run: sam build
+
+      - name: SAM deploy
+        working-directory: infra
+        run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              "Stage=dev SentryDsn=${{ secrets.SENTRY_DSN }}"
+
+      - name: Smoke-test the live API
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name comboweather-dev \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiBaseUrl`].OutputValue' \
+            --output text)
+          echo "Probing $API_URL/forecast?lat=59.33&lon=18.07"
+          curl --fail --silent --show-error "$API_URL/forecast?lat=59.33&lon=18.07" > /dev/null

@@ -1,0 +1,155 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudFormationStacks",
+      "Effect": "Allow",
+      "Action": "cloudformation:*",
+      "Resource": [
+        "arn:aws:cloudformation:eu-north-1:331751352222:stack/comboweather-*/*",
+        "arn:aws:cloudformation:us-east-1:331751352222:stack/comboweather-*/*",
+        "arn:aws:cloudformation:eu-north-1:aws:transform/Serverless-2016-10-31"
+      ]
+    },
+    {
+      "Sid": "CloudFormationGlobalReads",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:ListStacks",
+        "cloudformation:GetTemplateSummary",
+        "cloudformation:ValidateTemplate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SamPackagingBucket",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::aws-sam-cli-managed-default-samclisourcebucket-*",
+        "arn:aws:s3:::aws-sam-cli-managed-default-samclisourcebucket-*/*"
+      ]
+    },
+    {
+      "Sid": "SamBucketDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets",
+        "s3:CreateBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LambdaResources",
+      "Effect": "Allow",
+      "Action": "lambda:*",
+      "Resource": [
+        "arn:aws:lambda:eu-north-1:331751352222:function:comboweather-*",
+        "arn:aws:lambda:eu-north-1:331751352222:layer:comboweather-*",
+        "arn:aws:lambda:eu-north-1:331751352222:layer:comboweather-*:*"
+      ]
+    },
+    {
+      "Sid": "LambdaAccountReads",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetAccountSettings",
+        "lambda:ListFunctions",
+        "lambda:ListLayers"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ApiGatewayV2",
+      "Effect": "Allow",
+      "Action": "apigateway:*",
+      "Resource": [
+        "arn:aws:apigateway:eu-north-1::/apis",
+        "arn:aws:apigateway:eu-north-1::/apis/*",
+        "arn:aws:apigateway:eu-north-1::/tags/*"
+      ]
+    },
+    {
+      "Sid": "DynamoDBTables",
+      "Effect": "Allow",
+      "Action": "dynamodb:*",
+      "Resource": [
+        "arn:aws:dynamodb:eu-north-1:331751352222:table/comboweather-*",
+        "arn:aws:dynamodb:eu-north-1:331751352222:table/comboweather-*/index/*"
+      ]
+    },
+    {
+      "Sid": "DynamoDBList",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:ListTables",
+        "dynamodb:DescribeLimits"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LambdaLogs",
+      "Effect": "Allow",
+      "Action": "logs:*",
+      "Resource": [
+        "arn:aws:logs:eu-north-1:331751352222:log-group:/aws/lambda/comboweather-*",
+        "arn:aws:logs:eu-north-1:331751352222:log-group:/aws/lambda/comboweather-*:*",
+        "arn:aws:logs:eu-north-1:331751352222:log-group:/aws/http-api/comboweather-*",
+        "arn:aws:logs:eu-north-1:331751352222:log-group:/aws/http-api/comboweather-*:*"
+      ]
+    },
+    {
+      "Sid": "IAMScopedToComboweatherRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:PassRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::331751352222:role/comboweather-*"
+      ]
+    },
+    {
+      "Sid": "Budgets",
+      "Effect": "Allow",
+      "Action": "budgets:*",
+      "Resource": "arn:aws:budgets::331751352222:budget/comboweather-*"
+    },
+    {
+      "Sid": "XRayTracing",
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
