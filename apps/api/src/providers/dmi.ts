@@ -2,7 +2,6 @@ import type {
   CurrentConditions,
   DayPoint,
   HourPoint,
-  Precipitation,
   ProviderForecast,
   Wind,
 } from "@combo/shared";
@@ -21,7 +20,21 @@ const DMI_BASE =
 
 const DMI_ATTRIBUTION = "https://www.dmi.dk/friedata/dokumentation/basics";
 
-/** Parameters we ask DMI for. Drop a param here = parser no longer reads it. */
+/**
+ * Parameters we ask DMI for. Names must match the harmonie_dini_sf
+ * `parameter_names` exactly — the collection rejects the whole request
+ * (HTTP 400) if any single name is unknown. Confirmed against the live
+ * collection metadata 2026-05-23.
+ *
+ * Units returned by the EDR (which it doesn't declare in the response):
+ *   - temperature-2m         → Kelvin           → convert to °C
+ *   - wind-speed-10m         → m/s              → as-is
+ *   - wind-dir-10m           → degrees true     → as-is
+ *   - total-precipitation    → mm, accumulated  → diff to per-hour
+ *   - fraction-of-cloud-cover → 0..1            → as-is
+ *   - relative-humidity-2m   → 0..100           → /100
+ *   - pressure-sealevel      → Pa               → /100 to hPa
+ */
 const DMI_PARAMETERS = [
   "temperature-2m",
   "relative-humidity-2m",
@@ -29,7 +42,7 @@ const DMI_PARAMETERS = [
   "wind-dir-10m",
   "total-precipitation",
   "fraction-of-cloud-cover",
-  "pressure-sea-level",
+  "pressure-sealevel",
 ] as const;
 
 type DmiParameter = (typeof DMI_PARAMETERS)[number];
@@ -95,8 +108,21 @@ export function parseDmi(raw: DmiCoverage, fetchedAt: string): ProviderForecast 
     return typeof v === "number" ? v : undefined;
   };
 
-  const hourly: HourPoint[] = times.map((time, i) => toHourPoint(time, i, get));
-  const current = toCurrentConditions(times[0]!, 0, get);
+  // Precompute per-hour precip from the accumulated series. DMI returns
+  // total-precipitation as mm accumulated since forecast start, so the
+  // amount for hour i is total[i] − total[i-1]. First hour just uses
+  // total[0] (which is usually 0 anyway at model t=0).
+  const totalPrecipAccum: number[] = times.map((_, i) =>
+    requireValue(get, "total-precipitation", i),
+  );
+  const precipHourly: number[] = totalPrecipAccum.map((v, i) =>
+    i === 0 ? Math.max(0, v) : Math.max(0, v - totalPrecipAccum[i - 1]!),
+  );
+
+  const hourly: HourPoint[] = times.map((time, i) =>
+    toHourPoint(time, i, get, precipHourly[i]!),
+  );
+  const current = toCurrentConditions(times[0]!, 0, get, precipHourly[0]!);
   const daily = aggregateDaily(hourly);
 
   return {
@@ -118,17 +144,16 @@ function requireValue(get: Getter, param: DmiParameter, idx: number): number {
   return v;
 }
 
+/** Kelvin → Celsius. DMI returns temperature-2m in K. */
+function kelvinToCelsius(k: number): number {
+  return k - 273.15;
+}
+
 function toWind(get: Getter, idx: number): Wind {
   return {
     speed: requireValue(get, "wind-speed-10m", idx),
     direction: requireValue(get, "wind-dir-10m", idx),
   };
-}
-
-function toPrecip(get: Getter, idx: number): Precipitation {
-  // DMI returns total-precipitation in mm. probability isn't part of the
-  // collection — UI just renders amount.
-  return { amount: requireValue(get, "total-precipitation", idx) };
 }
 
 /**
@@ -148,33 +173,41 @@ function deriveDmiSymbolCode(precipMm: number, cloudFraction: number | undefined
   return 1; // clear
 }
 
-function toCurrentConditions(time: string, idx: number, get: Getter): CurrentConditions {
-  const precip = toPrecip(get, idx);
+function toCurrentConditions(
+  time: string,
+  idx: number,
+  get: Getter,
+  precipMm: number,
+): CurrentConditions {
   const cloud = get("fraction-of-cloud-cover", idx);
   const conditions: CurrentConditions = {
     time,
-    temperature: requireValue(get, "temperature-2m", idx),
-    precipitation: precip,
+    temperature: kelvinToCelsius(requireValue(get, "temperature-2m", idx)),
+    precipitation: { amount: precipMm },
     wind: toWind(get, idx),
-    symbol: dmiSymbolToMet(deriveDmiSymbolCode(precip.amount, cloud), time),
+    symbol: dmiSymbolToMet(deriveDmiSymbolCode(precipMm, cloud), time),
   };
   if (cloud !== undefined) conditions.cloudCover = cloud;
-  const pressure = get("pressure-sea-level", idx);
-  if (pressure !== undefined) conditions.pressure = pressure;
+  const pressurePa = get("pressure-sealevel", idx);
+  if (pressurePa !== undefined) conditions.pressure = pressurePa / 100;
   const humidity = get("relative-humidity-2m", idx);
   if (humidity !== undefined) conditions.humidity = humidity / 100;
   return conditions;
 }
 
-function toHourPoint(time: string, idx: number, get: Getter): HourPoint {
-  const precip = toPrecip(get, idx);
+function toHourPoint(
+  time: string,
+  idx: number,
+  get: Getter,
+  precipMm: number,
+): HourPoint {
   const cloud = get("fraction-of-cloud-cover", idx);
   return {
     time,
-    temperature: requireValue(get, "temperature-2m", idx),
-    precipitation: precip,
+    temperature: kelvinToCelsius(requireValue(get, "temperature-2m", idx)),
+    precipitation: { amount: precipMm },
     wind: toWind(get, idx),
-    symbol: dmiSymbolToMet(deriveDmiSymbolCode(precip.amount, cloud), time),
+    symbol: dmiSymbolToMet(deriveDmiSymbolCode(precipMm, cloud), time),
   };
 }
 

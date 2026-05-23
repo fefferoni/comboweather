@@ -2,7 +2,7 @@
   "type": "Coverage",
   "domain": {
     "type": "Domain",
-    "domainType": "PointSeries",
+    "domainType": "Grid",
     "axes": {
       "x": { "values": [12.57] },
       "y": { "values": [55.68] },
@@ -19,45 +19,45 @@
   "ranges": {
     "temperature-2m": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
-      "values": [20.1, 16.7, 12.0, 9.5]
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
+      "values": [293.25, 289.85, 285.15, 282.65]
     },
     "relative-humidity-2m": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
       "values": [54, 70, 88, 90]
     },
     "wind-speed-10m": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
       "values": [4.2, 3.0, 2.3, 1.9]
     },
     "wind-dir-10m": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
       "values": [270, 244, 212, 200]
     },
     "total-precipitation": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
-      "values": [0, 0, 1.2, 0.1]
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
+      "values": [0, 0, 1.2, 1.3]
     },
     "fraction-of-cloud-cover": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
       "values": [0.1, 0.6, 0.95, 0.92]
     },
-    "pressure-sea-level": {
+    "pressure-sealevel": {
       "type": "NdArray",
-      "axisNames": ["t"],
-      "shape": [4],
-      "values": [1020.0, 1019.2, 1018.4, 1018.0]
+      "axisNames": ["t", "y", "x"],
+      "shape": [4, 1, 1],
+      "values": [102000.0, 101920.0, 101840.0, 101800.0]
     }
   }
 }
