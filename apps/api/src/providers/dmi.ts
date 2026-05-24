@@ -19,7 +19,7 @@ import { roundCoord } from "../lib/geo.js";
 const DMI_BASE =
   "https://opendataapi.dmi.dk/v1/forecastedr/collections/harmonie_dini_sf/position";
 
-const DMI_ATTRIBUTION = "https://www.dmi.dk/friedata/dokumentation/basics";
+const DMI_ATTRIBUTION = "https://www.dmi.dk/frie-data";
 
 /** Parameters we ask DMI for. Drop a param here = parser no longer reads it. */
 const DMI_PARAMETERS = [

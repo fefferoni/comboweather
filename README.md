@@ -6,15 +6,16 @@ a single consensus forecast, with each provider still visible in its own tab.
 
 ## Status
 
-**v0.1 — Walking skeleton (backend only).** SMHI wired up through API Gateway +
-Lambda + DynamoDB, served via `GET /forecast?lat=&lon=`. MET Norway, DMI, and
-the full combine algorithm land in v0.2; mobile shell in v0.3.
+**v0.3 — Mobile shell on iPhone.** Expo + Expo Router app with 4 tabs (Combo /
+SMHI / MET / DMI), GPS-driven, talks to the live backend. Backend (v0.2) has
+all three providers + the combine algorithm live in eu-north-1.
 
 ## Layout
 
 ```
 apps/
   api/          ← Lambda handlers + provider parsers (TypeScript)
+  mobile/       ← Expo + Expo Router app (TypeScript, NativeWind)
 packages/
   shared/       ← combine algorithm + canonical forecast types (shared by api + mobile)
 infra/          ← AWS SAM template (API Gateway + Lambda + DynamoDB)
@@ -55,10 +56,21 @@ sam deploy --guided   # first time only; writes samconfig.toml
 sam deploy            # subsequent deploys
 ```
 
+### Run the mobile app
+
+```bash
+pnpm --filter @combo/mobile start    # scan the QR code with Expo Go on iOS / Android
+```
+
+Defaults to the production API. Point at a local `sam local start-api` by setting
+`EXPO_PUBLIC_API_BASE_URL=http://<your-lan-ip>:3000` before `start`. Sentry stays
+no-op until you set `EXPO_PUBLIC_SENTRY_DSN`.
+
 ## Attribution
 
 - Weather data: SMHI (CC-BY 4.0), MET Norway (CC-BY 4.0), DMI (free license w/
-  attribution). Wired in via v0.2.
+  attribution). Provider tabs link out to each provider's terms; the Combo tab
+  shows a `Data: SMHI · MET Norway · DMI` footer.
 
 ## License
 
