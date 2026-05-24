@@ -6,9 +6,11 @@ a single consensus forecast, with each provider still visible in its own tab.
 
 ## Status
 
-**v0.3 — Mobile shell on iPhone.** Expo + Expo Router app with 4 tabs (Combo /
-SMHI / MET / DMI), GPS-driven, talks to the live backend. Backend (v0.2) has
-all three providers + the combine algorithm live in eu-north-1.
+**v0.4 — Drill-down, favorites, search, settings, i18n.** Mobile app extends
+the v0.3 shell with hourly drill-down, a 7-day long-range view, persistent
+favorites, free-text location search (via a backend Nominatim proxy), a
+settings screen (theme / language / wind units), and Swedish + English UI.
+Bundled MET weather icons replace the v0.3 emoji glyphs.
 
 ## Layout
 
@@ -46,6 +48,7 @@ cd infra
 sam build
 sam local start-api
 curl 'http://localhost:3000/forecast?lat=59.33&lon=18.07'
+curl 'http://localhost:3000/search?q=stockholm&lang=sv'
 ```
 
 ### Deploy

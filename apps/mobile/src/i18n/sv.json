@@ -1,0 +1,98 @@
+{
+  "tabs": {
+    "combo": "Combo",
+    "smhi": "SMHI",
+    "met": "MET",
+    "dmi": "DMI"
+  },
+  "screen": {
+    "combo": "Konsensus",
+    "smhi": "SMHI",
+    "met": "MET Norge",
+    "dmi": "DMI"
+  },
+  "common": {
+    "today": "Idag",
+    "tomorrow": "Imorgon",
+    "loading": "Hämtar prognos…",
+    "findingLocation": "Hittar din plats…",
+    "tryAgain": "Försök igen",
+    "close": "Stäng",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "back": "Tillbaka",
+    "confidence": "Tillförlitlighet",
+    "confidenceHigh": "hög",
+    "confidenceMedium": "medel",
+    "confidenceLow": "låg"
+  },
+  "forecast": {
+    "feelsLike": "Känns som {{value}}",
+    "high": "Max",
+    "low": "Min",
+    "precip": "Nederbörd",
+    "precipChance": "{{value}}%",
+    "wind": "Vind",
+    "noDaily": "Ingen dagsprognos tillgänglig.",
+    "viewWeek": "7-dygnsprognos →",
+    "viewHourly": "Se per timme →",
+    "providersDisagree": "Källorna är oeniga"
+  },
+  "errors": {
+    "locationDenied": {
+      "title": "Platsbehörighet krävs",
+      "message": "ComboWeather behöver din plats för att hämta lokal prognos. Aktivera i Inställningar och dra för att uppdatera."
+    },
+    "locationError": {
+      "title": "Kunde inte läsa plats"
+    },
+    "forecastUnavailable": {
+      "title": "Prognos otillgänglig"
+    },
+    "searchUnavailable": "Sökningen är otillgänglig. Försök igen."
+  },
+  "location": {
+    "title": "Platser",
+    "gps": "Nuvarande plats (GPS)",
+    "favorites": "Favoriter",
+    "searchPlaceholder": "Sök efter en stad",
+    "minQuery": "Skriv minst två tecken",
+    "noResults": "Inga träffar i Norden.",
+    "addToFavorites": "Spara som favorit",
+    "remove": "Ta bort",
+    "selectGps": "Använd GPS"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "theme": "Tema",
+    "themeSystem": "System",
+    "themeLight": "Ljust",
+    "themeDark": "Mörkt",
+    "language": "Språk",
+    "languageSystem": "Enhetens språk",
+    "languageEnglish": "English",
+    "languageSwedish": "Svenska",
+    "windUnit": "Vindenhet",
+    "windUnitMs": "m/s",
+    "windUnitKmh": "km/h",
+    "about": "Om"
+  },
+  "about": {
+    "title": "Om ComboWeather",
+    "tagline": "Tre nordiska prognoser, en konsensus.",
+    "dataSources": "Datakällor",
+    "smhi": "Sveriges Meteorologiska och Hydrologiska Institut (SMHI) — CC-BY 4.0.",
+    "met": "Meteorologisk institutt (MET Norway / Yr.no) — CC-BY 4.0.",
+    "dmi": "Danmarks Meteorologiske Institut (DMI) — fri datalicens, attribution krävs.",
+    "geocoder": "Sökning via OpenStreetMap Nominatim.",
+    "version": "Version {{version}}"
+  },
+  "header": {
+    "location": "Plats",
+    "settings": "Inställningar"
+  },
+  "wind": {
+    "ms": "{{value}} m/s",
+    "kmh": "{{value}} km/h"
+  }
+}

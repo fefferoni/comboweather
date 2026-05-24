@@ -15,7 +15,11 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.d.ts", "src/handlers/forecast.ts"],
+      exclude: [
+        "src/**/*.d.ts",
+        "src/handlers/forecast.ts",
+        "src/handlers/search.ts",
+      ],
     },
   },
 });

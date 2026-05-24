@@ -1,10 +1,8 @@
 import type { CurrentConditions, Confidence } from "@combo/shared";
 import { Text, View } from "react-native";
-import {
-  formatTemp,
-  formatWindDirection,
-  formatWindSpeed,
-} from "../format";
+import { formatTemp, formatWindDirection } from "../format";
+import { useFormat } from "../hooks/useFormat";
+import { useT } from "../i18n";
 import { ConfidenceChip } from "./ConfidenceChip";
 import { WeatherSymbol } from "./WeatherSymbol";
 
@@ -17,6 +15,8 @@ export function HeroCurrent({
   confidence?: Confidence;
   onConfidenceTap?: () => void;
 }) {
+  const fmt = useFormat();
+  const t = useT();
   return (
     <View className="rounded-3xl bg-surface p-6 shadow-sm dark:bg-surface-darkAlt">
       <View className="flex-row items-center justify-between">
@@ -26,7 +26,7 @@ export function HeroCurrent({
           </Text>
           {current.feelsLike !== undefined ? (
             <Text className="mt-1 text-sm text-ink-muted">
-              Feels like {formatTemp(current.feelsLike)}
+              {t("forecast.feelsLike", { value: formatTemp(current.feelsLike) })}
             </Text>
           ) : null}
         </View>
@@ -34,9 +34,9 @@ export function HeroCurrent({
       </View>
 
       <View className="mt-4 flex-row gap-3">
-        <Pill text={`${formatWindSpeed(current.wind.speed)} ${formatWindDirection(current.wind.direction)}`} />
+        <Pill text={`${fmt.wind(current.wind.speed)} ${formatWindDirection(current.wind.direction)}`} />
         {current.cloudCover !== undefined ? (
-          <Pill text={`${Math.round(current.cloudCover * 100)}% cloud`} />
+          <Pill text={`${Math.round(current.cloudCover * 100)}% ☁`} />
         ) : null}
       </View>
 

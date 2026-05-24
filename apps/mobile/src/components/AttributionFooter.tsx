@@ -7,7 +7,6 @@ export function AttributionFooter({
   url,
 }: {
   provider: ProviderId | "combo";
-  /** Provider's attribution URL from the API response; falls back to a hardcoded value. */
   url?: string;
 }) {
   if (provider === "combo") {

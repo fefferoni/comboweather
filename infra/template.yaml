@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: ComboWeather API — v0.2 (SMHI + MET Norway + DMI, combine algorithm).
+Description: ComboWeather API — v0.4 (forecast + Nominatim search proxy).
 
 Parameters:
   Stage:
@@ -25,6 +25,7 @@ Globals:
         STAGE: !Ref Stage
         SENTRY_DSN: !Ref SentryDsn
         FORECASTS_TABLE: !Ref ForecastsTable
+        SEARCHES_TABLE: !Ref SearchesTable
         NODE_OPTIONS: "--enable-source-maps"
 
 Resources:
@@ -44,6 +45,23 @@ Resources:
           KeyType: HASH
         - AttributeName: sk
           KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: false
+
+  SearchesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "comboweather-searches-${Stage}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
@@ -89,6 +107,33 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${ForecastFunction}"
       RetentionInDays: 14
 
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "comboweather-search-${Stage}"
+      Handler: search.handler
+      CodeUri: ../apps/api/.lambda-build/
+      # Smaller cap than forecast — Nominatim is rate-limited upstream so we
+      # have no reason to fan out wide here.
+      ReservedConcurrentExecutions: 10
+      Timeout: 6
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SearchesTable
+      Events:
+        Search:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ForecastApi
+            Method: GET
+            Path: /search
+
+  SearchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${SearchFunction}"
+      RetentionInDays: 14
+
 # NOTE: AWS Budgets is a global service that CloudFormation only supports in
 # us-east-1. The €10/€30/€100 budget alarms live in a separate stack —
 # infra/budgets.yaml — deployed to us-east-1. See infra/README.md.
@@ -100,3 +145,6 @@ Outputs:
   ForecastsTableName:
     Description: DynamoDB table for cached forecasts
     Value: !Ref ForecastsTable
+  SearchesTableName:
+    Description: DynamoDB table for cached geocoder responses
+    Value: !Ref SearchesTable

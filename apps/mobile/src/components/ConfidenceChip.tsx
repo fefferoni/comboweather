@@ -1,10 +1,11 @@
 import type { Confidence } from "@combo/shared";
 import { Pressable, Text, View } from "react-native";
+import { useT } from "../i18n";
 
-const TONE: Record<Confidence, { dot: string; label: string }> = {
-  high: { dot: "bg-emerald-500", label: "High confidence" },
-  medium: { dot: "bg-amber-500", label: "Providers differ" },
-  low: { dot: "bg-rose-500", label: "Providers disagree" },
+const DOT_FOR: Record<Confidence, string> = {
+  high: "bg-emerald-500",
+  medium: "bg-amber-500",
+  low: "bg-rose-500",
 };
 
 export function ConfidenceChip({
@@ -16,8 +17,15 @@ export function ConfidenceChip({
   onPress?: () => void;
   compact?: boolean;
 }) {
-  const { dot, label } = TONE[confidence];
-  // Plain dot for "high" — chip only flags disagreement.
+  const t = useT();
+  const dot = DOT_FOR[confidence];
+  const label =
+    confidence === "high"
+      ? t("common.confidenceHigh")
+      : confidence === "medium"
+        ? t("common.confidenceMedium")
+        : t("forecast.providersDisagree");
+
   if (confidence === "high" && compact) {
     return <View className={`h-2 w-2 rounded-full ${dot}`} />;
   }
@@ -31,7 +39,6 @@ export function ConfidenceChip({
       <View className={`h-2 w-2 rounded-full ${dot}`} />
       <Text className="text-xs font-medium text-ink-soft dark:text-ink-inverse">
         {label}
-        {onPress ? " · tap to compare" : ""}
       </Text>
     </Wrap>
   );
