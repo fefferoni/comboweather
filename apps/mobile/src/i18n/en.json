@@ -1,0 +1,98 @@
+{
+  "tabs": {
+    "combo": "Combo",
+    "smhi": "SMHI",
+    "met": "MET",
+    "dmi": "DMI"
+  },
+  "screen": {
+    "combo": "Consensus",
+    "smhi": "SMHI",
+    "met": "MET Norway",
+    "dmi": "DMI"
+  },
+  "common": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "loading": "Loading forecast…",
+    "findingLocation": "Finding your location…",
+    "tryAgain": "Try again",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "confidence": "Confidence",
+    "confidenceHigh": "high",
+    "confidenceMedium": "medium",
+    "confidenceLow": "low"
+  },
+  "forecast": {
+    "feelsLike": "Feels like {{value}}",
+    "high": "High",
+    "low": "Low",
+    "precip": "Precip",
+    "precipChance": "{{value}}%",
+    "wind": "Wind",
+    "noDaily": "No daily forecast available.",
+    "viewWeek": "7-day forecast →",
+    "viewHourly": "View hourly →",
+    "providersDisagree": "Providers disagree"
+  },
+  "errors": {
+    "locationDenied": {
+      "title": "Location permission needed",
+      "message": "ComboWeather needs your location to fetch the local forecast. Enable it in Settings and pull to refresh."
+    },
+    "locationError": {
+      "title": "Couldn't read location"
+    },
+    "forecastUnavailable": {
+      "title": "Forecast unavailable"
+    },
+    "searchUnavailable": "Search unavailable. Try again."
+  },
+  "location": {
+    "title": "Locations",
+    "gps": "Current location (GPS)",
+    "favorites": "Favorites",
+    "searchPlaceholder": "Search for a city",
+    "minQuery": "Type at least two characters",
+    "noResults": "No matches in the Nordics.",
+    "addToFavorites": "Save to favorites",
+    "remove": "Remove",
+    "selectGps": "Use GPS"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "languageSystem": "Device default",
+    "languageEnglish": "English",
+    "languageSwedish": "Svenska",
+    "windUnit": "Wind unit",
+    "windUnitMs": "m/s",
+    "windUnitKmh": "km/h",
+    "about": "About"
+  },
+  "about": {
+    "title": "About ComboWeather",
+    "tagline": "Three Nordic forecasts, one consensus.",
+    "dataSources": "Data sources",
+    "smhi": "Sveriges Meteorologiska och Hydrologiska Institut (SMHI) — CC-BY 4.0.",
+    "met": "Meteorologisk institutt (MET Norway / Yr.no) — CC-BY 4.0.",
+    "dmi": "Danmarks Meteorologiske Institut (DMI) — free data license, attribution required.",
+    "geocoder": "Search powered by OpenStreetMap Nominatim.",
+    "version": "Version {{version}}"
+  },
+  "header": {
+    "location": "Location",
+    "settings": "Settings"
+  },
+  "wind": {
+    "ms": "{{value}} m/s",
+    "kmh": "{{value}} km/h"
+  }
+}

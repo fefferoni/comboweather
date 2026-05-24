@@ -1,16 +1,17 @@
 import type { ForecastResponse, ProviderId } from "@combo/shared";
 import { Text, View } from "react-native";
-import { formatTempPrecise } from "../format";
+import { formatTempPrecise, formatWindSpeed } from "../format";
+import { useT } from "../i18n";
 import { providerLabel } from "../theme/colors";
+import { useSettings } from "../store/settings";
 
-// Surfaces per-provider readings for the current hero values so the user can
-// see exactly what's being combined. Triggered by tapping the confidence chip
-// on the Combo tab.
 export function SpreadDetail({
   providers,
 }: {
   providers: ForecastResponse["providers"];
 }) {
+  const t = useT();
+  const windUnit = useSettings((s) => s.windUnit);
   const ids: ProviderId[] = ["smhi", "met", "dmi"];
   const rows = ids
     .map((id) => ({ id, data: providers[id] }))
@@ -21,7 +22,7 @@ export function SpreadDetail({
   return (
     <View className="mt-2 rounded-2xl bg-surface-alt p-4 dark:bg-surface-dark">
       <Text className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Right now, per provider
+        {t("forecast.providersDisagree")}
       </Text>
       {rows.map(({ id, data }) => (
         <View
@@ -33,7 +34,7 @@ export function SpreadDetail({
           </Text>
           <Text className="text-sm text-ink-soft dark:text-ink-inverse">
             {formatTempPrecise(data.current.temperature)} ·{" "}
-            {data.current.wind.speed.toFixed(1)} m/s
+            {formatWindSpeed(data.current.wind.speed, windUnit)}
           </Text>
         </View>
       ))}

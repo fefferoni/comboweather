@@ -1,6 +1,7 @@
 import type { DayPoint, Confidence } from "@combo/shared";
 import { Text, View } from "react-native";
-import { dayLabel, formatPrecip, formatProbability, formatTemp } from "../format";
+import { formatPrecip, formatProbability, formatTemp } from "../format";
+import { useFormat } from "../hooks/useFormat";
 import { ConfidenceChip } from "./ConfidenceChip";
 import { WeatherSymbol } from "./WeatherSymbol";
 
@@ -11,13 +12,14 @@ export function DayCard({
   day: DayPoint;
   confidence?: Confidence;
 }) {
+  const fmt = useFormat();
   const prob = formatProbability(day.precipitation.probability);
   return (
     <View className="flex-row items-center justify-between rounded-2xl bg-surface p-4 dark:bg-surface-darkAlt">
       <View className="flex-1">
         <View className="flex-row items-center gap-2">
           <Text className="text-base font-semibold text-ink dark:text-ink-inverse">
-            {dayLabel(day.date)}
+            {fmt.dayLabel(day.date)}
           </Text>
           {confidence && confidence !== "high" ? (
             <ConfidenceChip confidence={confidence} compact />

@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import type {
   Confidence,
   CurrentConditions,
@@ -14,7 +15,8 @@ import type {
   ProviderId,
 } from "@combo/shared";
 import { useForecast } from "../api/forecast";
-import { useCurrentLocation } from "../hooks/useLocation";
+import { useActiveLocation } from "../hooks/useActiveLocation";
+import { useT } from "../i18n";
 import { AttributionFooter } from "./AttributionFooter";
 import { DayCard } from "./DayCard";
 import { HeroCurrent } from "./HeroCurrent";
@@ -35,8 +37,10 @@ interface ScreenData {
 }
 
 export function ForecastScreen({ variant }: { variant: Variant }) {
+  const t = useT();
+  const router = useRouter();
   const { status: locationStatus, refresh: refreshLocation } =
-    useCurrentLocation();
+    useActiveLocation();
   const coords =
     locationStatus.kind === "ready"
       ? { lat: locationStatus.lat, lon: locationStatus.lon }
@@ -78,94 +82,123 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
     locationStatus.kind === "requesting" ||
     (locationStatus.kind === "ready" && query.isLoading);
 
-  return (
-    <SafeAreaView className="flex-1 bg-surface-alt dark:bg-surface-dark">
-      <ScrollView
-        contentContainerClassName="p-4 gap-4"
-        refreshControl={
-          <RefreshControl
-            refreshing={query.isFetching && !query.isLoading}
-            onRefresh={() => query.refetch()}
-          />
-        }
-      >
-        <Text className="text-2xl font-semibold text-ink dark:text-ink-inverse">
-          {variant === "combo" ? "Consensus" : providerLabel[variant]}
-        </Text>
+  function openDay(date: string) {
+    router.push({
+      pathname: "/day/[provider]/[date]",
+      params: { provider: variant, date },
+    });
+  }
 
-        {locationStatus.kind === "denied" ? (
-          <ErrorState
-            title="Location permission needed"
-            message="ComboWeather needs your location to fetch the local forecast. Enable it in Settings and pull to refresh."
-            onRetry={refreshLocation}
+  function openWeek() {
+    router.push({
+      pathname: "/week/[provider]",
+      params: { provider: variant },
+    });
+  }
+
+  return (
+    <ScrollView
+      contentContainerClassName="p-4 gap-4"
+      refreshControl={
+        <RefreshControl
+          refreshing={query.isFetching && !query.isLoading}
+          onRefresh={() => query.refetch()}
+        />
+      }
+    >
+      <Text className="text-2xl font-semibold text-ink dark:text-ink-inverse">
+        {variant === "combo" ? t("screen.combo") : providerLabel[variant]}
+      </Text>
+
+      {locationStatus.kind === "denied" ? (
+        <ErrorState
+          title={t("errors.locationDenied.title")}
+          message={t("errors.locationDenied.message")}
+          onRetry={refreshLocation}
+          retryLabel={t("common.tryAgain")}
+        />
+      ) : locationStatus.kind === "error" ? (
+        <ErrorState
+          title={t("errors.locationError.title")}
+          message={locationStatus.message}
+          onRetry={refreshLocation}
+          retryLabel={t("common.tryAgain")}
+        />
+      ) : query.isError && !query.data ? (
+        <ErrorState
+          title={t("errors.forecastUnavailable.title")}
+          message={query.error?.message ?? "Unknown error"}
+          onRetry={() => query.refetch()}
+          retryLabel={t("common.tryAgain")}
+        />
+      ) : isLoading || !screen.current ? (
+        <View className="items-center py-16">
+          <ActivityIndicator />
+          <Text className="mt-2 text-sm text-ink-muted">
+            {locationStatus.kind === "requesting"
+              ? t("common.findingLocation")
+              : t("common.loading")}
+          </Text>
+        </View>
+      ) : (
+        <>
+          <HeroCurrent
+            current={screen.current}
+            {...(variant === "combo" && screen.confidence !== undefined
+              ? {
+                  confidence: screen.confidence,
+                  onConfidenceTap: () => setShowSpread((v) => !v),
+                }
+              : {})}
           />
-        ) : locationStatus.kind === "error" ? (
-          <ErrorState
-            title="Couldn't read location"
-            message={locationStatus.message}
-            onRetry={refreshLocation}
-          />
-        ) : query.isError && !query.data ? (
-          <ErrorState
-            title="Forecast unavailable"
-            message={query.error?.message ?? "Unknown error"}
-            onRetry={() => query.refetch()}
-          />
-        ) : isLoading || !screen.current ? (
-          <View className="items-center py-16">
-            <ActivityIndicator />
-            <Text className="mt-2 text-sm text-ink-muted">
-              {locationStatus.kind === "requesting"
-                ? "Finding your location…"
-                : "Loading forecast…"}
+          {variant === "combo" && showSpread && query.data ? (
+            <SpreadDetail providers={query.data.providers} />
+          ) : null}
+          {screen.days.length === 0 ? (
+            <Text className="text-sm text-ink-muted">
+              {t("forecast.noDaily")}
             </Text>
-          </View>
-        ) : (
-          <>
-            <HeroCurrent
-              current={screen.current}
-              {...(variant === "combo" && screen.confidence !== undefined
-                ? {
-                    confidence: screen.confidence,
-                    onConfidenceTap: () => setShowSpread((v) => !v),
-                  }
-                : {})}
-            />
-            {variant === "combo" && showSpread && query.data ? (
-              <SpreadDetail providers={query.data.providers} />
-            ) : null}
-            {screen.days.length === 0 ? (
-              <Text className="text-sm text-ink-muted">
-                No daily forecast available.
-              </Text>
-            ) : (
-              <View className="gap-3">
-                {screen.days.map((row) => (
+          ) : (
+            <View className="gap-3">
+              {screen.days.map((row) => (
+                <Pressable
+                  key={row.day.date}
+                  onPress={() => openDay(row.day.date)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t("forecast.viewHourly")} ${row.day.date}`}
+                >
                   <DayCard
-                    key={row.day.date}
                     day={row.day}
                     {...(row.confidence !== undefined
                       ? { confidence: row.confidence }
                       : {})}
                   />
-                ))}
-              </View>
-            )}
-            <AttributionFooter
-              provider={variant}
-              {...(variant !== "combo" && query.data?.providers[variant]
-                ? { url: query.data.providers[variant].attributionUrl }
-                : {})}
-            />
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          <Pressable
+            onPress={openWeek}
+            className="self-center rounded-full bg-surface-alt px-4 py-2 dark:bg-surface-darkAlt"
+            accessibilityRole="button"
+          >
+            <Text className="text-sm font-medium text-sky-600">
+              {t("forecast.viewWeek")}
+            </Text>
+          </Pressable>
+          <AttributionFooter
+            provider={variant}
+            {...(variant !== "combo" && query.data?.providers[variant]
+              ? { url: query.data.providers[variant].attributionUrl }
+              : {})}
+          />
+        </>
+      )}
+    </ScrollView>
   );
 }
 
 function pickDayPoints<T extends { date: string }>(days: T[]): T[] {
-  // "Today (remaining)" + "Tomorrow" — index 0 and 1 of the canonical daily grid.
   return days.slice(0, 2);
 }
 
@@ -173,10 +206,12 @@ function ErrorState({
   title,
   message,
   onRetry,
+  retryLabel,
 }: {
   title: string;
   message: string;
   onRetry: () => void;
+  retryLabel: string;
 }) {
   return (
     <View className="items-center gap-2 rounded-2xl bg-surface p-6 dark:bg-surface-darkAlt">
@@ -184,13 +219,13 @@ function ErrorState({
         {title}
       </Text>
       <Text className="text-center text-sm text-ink-muted">{message}</Text>
-      <Text
+      <Pressable
         onPress={onRetry}
-        className="mt-2 text-sm font-medium text-sky-600"
+        className="mt-2 rounded-full bg-sky-600 px-4 py-2"
         accessibilityRole="button"
       >
-        Try again
-      </Text>
+        <Text className="text-sm font-medium text-white">{retryLabel}</Text>
+      </Pressable>
     </View>
   );
 }
