@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "ComboWeather",
+    "slug": "comboweather",
+    "scheme": "comboweather",
+    "version": "0.3.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "se.pfeffer.comboweather",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ComboWeather uses your location to fetch the local weather forecast."
+      }
+    },
+    "android": {
+      "package": "se.pfeffer.comboweather",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ComboWeather uses your location to fetch the local weather forecast."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

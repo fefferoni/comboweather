@@ -19,7 +19,7 @@ import { roundCoord } from "../lib/geo.js";
 const SMHI_BASE =
   "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point";
 
-const SMHI_ATTRIBUTION = "https://www.smhi.se/data/oppna-data/villkor-for-anvandning";
+const SMHI_ATTRIBUTION = "https://opendata.smhi.se/";
 
 export interface SmhiPointData {
   air_temperature?: number;

@@ -1,0 +1,34 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@combo/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@combo/shared/*": [
+        "../../packages/shared/src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "expo-router/types",
+      "nativewind/types"
+    ]
+  },
+  "include": [
+    "app/**/*",
+    "src/**/*",
+    ".expo/types/**/*",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts",
+    ".expo/types/**/*.ts"
+  ]
+}
