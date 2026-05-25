@@ -100,6 +100,12 @@ jobs:
       # check that the combo really has all three providers. A 200 alone isn't
       # enough — the handler tolerates per-provider failures and would still
       # return 200 with only 1 or 2 providers if one was silently broken.
+      #
+      # We retry up to 3 times with 5s backoff because the first invocation
+      # right after a `sam deploy` occasionally hits a cold-start 500 while
+      # API Gateway / Lambda finish propagating the freshly-published revision
+      # — that flake bit us once on the v0.4 deploy. Retries are bounded and
+      # the providerCount=3 gate still hard-fails real regressions.
       - name: Smoke-test the live API
         run: |
           API_URL=$(aws cloudformation describe-stacks \
@@ -107,9 +113,26 @@ jobs:
             --query 'Stacks[0].Outputs[?OutputKey==`ApiBaseUrl`].OutputValue' \
             --output text)
           echo "Probing $API_URL/forecast?lat=59.33&lon=18.07"
-          BODY=$(curl --fail --silent --show-error "$API_URL/forecast?lat=59.33&lon=18.07")
-          COUNT=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin)['combo']['providerCount'])")
-          PROVIDERS=$(echo "$BODY" | python3 -c "import json,sys; print(','.join(sorted(json.load(sys.stdin)['providers'].keys())))")
+
+          ATTEMPTS=3
+          for i in $(seq 1 $ATTEMPTS); do
+            HTTP=$(curl --silent --show-error --output /tmp/smoke.json --write-out "%{http_code}" \
+              "$API_URL/forecast?lat=59.33&lon=18.07" || echo "000")
+            if [ "$HTTP" = "200" ]; then
+              echo "Attempt $i: HTTP 200"
+              break
+            fi
+            echo "Attempt $i: HTTP $HTTP — retrying in 5s"
+            if [ "$i" = "$ATTEMPTS" ]; then
+              echo "::error::Smoke probe failed after $ATTEMPTS attempts (last HTTP=$HTTP)"
+              cat /tmp/smoke.json || true
+              exit 1
+            fi
+            sleep 5
+          done
+
+          COUNT=$(python3 -c "import json; print(json.load(open('/tmp/smoke.json'))['combo']['providerCount'])")
+          PROVIDERS=$(python3 -c "import json; print(','.join(sorted(json.load(open('/tmp/smoke.json'))['providers'].keys())))")
           echo "providerCount=$COUNT providers=$PROVIDERS"
           if [ "$COUNT" != "3" ]; then
             echo "::error::Expected providerCount=3, got $COUNT (providers: $PROVIDERS)"
