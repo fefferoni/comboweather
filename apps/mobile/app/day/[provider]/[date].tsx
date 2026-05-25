@@ -48,8 +48,7 @@ export default function HourlyDrillDownScreen() {
   const hours = useMemo(() => {
     if (!query.data || !date) return [];
     const source: HourPoint[] = pickHours(query.data, variant);
-    const matching = source.filter((h) => h.time.startsWith(date));
-    return densityGradient(matching);
+    return hoursForDate(source, date);
   }, [query.data, variant, date]);
 
   const title = variant === "combo"
@@ -136,29 +135,39 @@ function pickHours(
 }
 
 /**
- * Density gradient: hourly for the first 12h after `now`, every 3h until 24h,
- * every 6h after that. Falls back to the raw list if everything is in the past.
+ * Show every hour the upstream provider returned for `date`. Today is trimmed
+ * to "from now onward" (we drop hours more than ~1h in the past so the row
+ * the user just left in the day-card view doesn't pollute the drill-down).
+ * Resolution is whatever the provider gave us — SMHI ships 1h for the first
+ * ~36h then 3h, MET 1h for ~48h then 6h. We deliberately do NOT thin the
+ * grid further: the drill-down is the place users zoom in to ask "what's it
+ * like at 8am?", and a uniform 3h grid for "tomorrow" defeats that.
+ *
+ * The backend's `daily[].date` is currently keyed by UTC civil date (an
+ * unfinished v0.4 todo flagged in `apps/api/src/providers/smhi.ts`). The
+ * user reads day-card labels in *local* time though — Stockholm summer is
+ * UTC+2, so a card labelled "Tomorrow" would otherwise drill into UTC-day
+ * hours that display as local 02:00 → next-day 01:00. We sidestep that by
+ * filtering the hourly list on each hour's *local* civil date instead of
+ * its UTC date. Safe for Nordics (UTC+1/+2 only); revisit if we ever ship
+ * a non-Nordic build.
  */
-function densityGradient(hours: HourPoint[]): HourPoint[] {
-  if (hours.length === 0) return hours;
-  const now = Date.now();
-  const cutoffHourly = now + 12 * 60 * 60 * 1000;
-  const cutoff3h = now + 24 * 60 * 60 * 1000;
-  const out: HourPoint[] = [];
-  for (const h of hours) {
+function hoursForDate(hours: HourPoint[], date: string): HourPoint[] {
+  const matching = hours.filter((h) => localDateOf(h.time) === date);
+  if (matching.length === 0) return matching;
+  const cutoff = Date.now() - 60 * 60 * 1000;
+  const trimmed = matching.filter((h) => {
     const t = Date.parse(h.time);
-    if (!Number.isFinite(t)) continue;
-    if (t < now - 60 * 60 * 1000) continue;
-    if (t < cutoffHourly) {
-      out.push(h);
-      continue;
-    }
-    const hour = new Date(t).getUTCHours();
-    if (t < cutoff3h) {
-      if (hour % 3 === 0) out.push(h);
-      continue;
-    }
-    if (hour % 6 === 0) out.push(h);
-  }
-  return out.length > 0 ? out : hours;
+    return !Number.isFinite(t) || t >= cutoff;
+  });
+  return trimmed.length > 0 ? trimmed : matching;
+}
+
+function localDateOf(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }

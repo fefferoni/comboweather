@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -48,6 +48,20 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
   const query = useForecast(coords);
   const [showSpread, setShowSpread] = useState(false);
 
+  // The forecast query is shared across all 4 tabs (same hook, same key), so
+  // `query.isFetching` is true on every tab whenever any tab triggered a
+  // refetch. Binding RefreshControl directly to that would show a frozen,
+  // non-animating spinner on the OTHER tabs the moment they mount — iOS
+  // UIRefreshControl can't animate a `refreshing={true}` state that wasn't
+  // user-initiated on this scrollview. We instead track a local flag that's
+  // only set by THIS tab's pull-gesture and cleared when the fetch settles.
+  const [userRefreshing, setUserRefreshing] = useState(false);
+  useEffect(() => {
+    if (userRefreshing && !query.isFetching) {
+      setUserRefreshing(false);
+    }
+  }, [userRefreshing, query.isFetching]);
+
   const screen = useMemo<ScreenData>(() => {
     const empty: ScreenData = {
       current: null,
@@ -82,6 +96,15 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
     locationStatus.kind === "requesting" ||
     (locationStatus.kind === "ready" && query.isLoading);
 
+  // Per-provider failure is expected — the combo tab tolerates 1 or 2 providers
+  // dropping out. On a provider tab, distinguish "still loading" from "fetched,
+  // but this provider isn't in the response" so we don't spin forever (e.g.
+  // when DMI's upstream momentarily fails and the cached response omits it).
+  const providerMissing =
+    variant !== "combo" &&
+    !!query.data &&
+    !query.data.providers[variant];
+
   function openDay(date: string) {
     router.push({
       pathname: "/day/[provider]/[date]",
@@ -101,12 +124,15 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
       contentContainerClassName="p-4 gap-4"
       refreshControl={
         <RefreshControl
-          refreshing={query.isFetching && !query.isLoading}
-          onRefresh={() => query.refetch()}
+          refreshing={userRefreshing}
+          onRefresh={() => {
+            setUserRefreshing(true);
+            query.refetch();
+          }}
         />
       }
     >
-      <Text className="text-2xl font-semibold text-ink dark:text-ink-inverse">
+      <Text className="text-3xl font-bold text-ink dark:text-ink-inverse">
         {variant === "combo" ? t("screen.combo") : providerLabel[variant]}
       </Text>
 
@@ -128,6 +154,17 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
         <ErrorState
           title={t("errors.forecastUnavailable.title")}
           message={query.error?.message ?? "Unknown error"}
+          onRetry={() => query.refetch()}
+          retryLabel={t("common.tryAgain")}
+        />
+      ) : providerMissing ? (
+        <ErrorState
+          title={t("errors.providerUnavailable.title", {
+            provider: providerLabel[variant as ProviderId],
+          })}
+          message={t("errors.providerUnavailable.message", {
+            provider: providerLabel[variant as ProviderId],
+          })}
           onRetry={() => query.refetch()}
           retryLabel={t("common.tryAgain")}
         />

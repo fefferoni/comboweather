@@ -47,3 +47,23 @@ export function useT(): (key: string, options?: Record<string, unknown>) => stri
 export function t(key: string, options?: Record<string, unknown>): string {
   return i18n.t(key, options);
 }
+
+/**
+ * The currently-active app language, normalized to one of our supported
+ * locales. Use this for date/time formatting where `settings.language`
+ * might be `undefined` (= "follow device default") — falling straight
+ * through `undefined` to `Intl` would otherwise default to `en-GB`
+ * regardless of device locale, which is why the week view rendered
+ * weekday names in English even when the rest of the UI was Swedish.
+ */
+export function activeLanguage(): Language {
+  const tag = i18n.locale;
+  if ((SUPPORTED_LANGUAGES as string[]).includes(tag)) return tag as Language;
+  // i18n-js may have set a region-coded tag (e.g. "sv-SE") or a fallback;
+  // strip to the language subtag and re-check.
+  const base = tag.split(/[-_]/)[0];
+  if (base && (SUPPORTED_LANGUAGES as string[]).includes(base)) {
+    return base as Language;
+  }
+  return "en";
+}

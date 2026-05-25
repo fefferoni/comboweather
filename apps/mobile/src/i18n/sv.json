@@ -49,6 +49,10 @@
     "forecastUnavailable": {
       "title": "Prognos otillgänglig"
     },
+    "providerUnavailable": {
+      "title": "{{provider}} otillgänglig",
+      "message": "Ingen aktuell data från {{provider}} just nu. De andra källorna kan fortfarande synas på Combo-fliken. Dra för att uppdatera, eller försök igen om en stund."
+    },
     "searchUnavailable": "Sökningen är otillgänglig. Försök igen."
   },
   "location": {

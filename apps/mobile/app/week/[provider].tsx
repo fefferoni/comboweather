@@ -34,16 +34,20 @@ export default function WeekScreen() {
   const coords = status.kind === "ready" ? { lat: status.lat, lon: status.lon } : null;
   const query = useForecast(coords);
 
+  // Backend may return up to 11 days from SMHI/MET and only ~3 from DMI. The
+  // disclosure label promises "7-day forecast", so cap at 7 — fewer is fine
+  // (DMI gracefully shows its 3). The 8+ day forecasts that SMHI ships are
+  // low-skill and bloat the list; truncating keeps the screen scannable.
   const days = useMemo<{ day: DayPoint; confidence?: "high" | "medium" | "low" }[]>(() => {
     if (!query.data) return [];
     if (variant === "combo") {
-      return query.data.combo.daily.map((d) => ({
+      return query.data.combo.daily.slice(0, 7).map((d) => ({
         day: d,
         confidence: d.confidence,
       }));
     }
     const provider = query.data.providers[variant];
-    return provider ? provider.daily.map((d) => ({ day: d })) : [];
+    return provider ? provider.daily.slice(0, 7).map((d) => ({ day: d })) : [];
   }, [query.data, variant]);
 
   const title = variant === "combo"
