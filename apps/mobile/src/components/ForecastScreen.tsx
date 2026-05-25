@@ -132,7 +132,7 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
         />
       }
     >
-      <Text className="text-2xl font-semibold text-ink dark:text-ink-inverse">
+      <Text className="text-3xl font-bold text-ink dark:text-ink-inverse">
         {variant === "combo" ? t("screen.combo") : providerLabel[variant]}
       </Text>
 

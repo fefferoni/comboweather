@@ -1,22 +1,8 @@
 import { Tabs, useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useT } from "../../src/i18n";
 import { useActiveLocation } from "../../src/hooks/useActiveLocation";
-
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return (
-    <Text
-      style={{
-        fontSize: 11,
-        fontWeight: focused ? "600" : "400",
-        color: focused ? "#0284c7" : "#64748b",
-      }}
-    >
-      {label}
-    </Text>
-  );
-}
 
 /**
  * Shared header above the tab content: location chip on the left (opens
@@ -43,9 +29,9 @@ function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel={t("header.location")}
         >
-          <Text className="text-xs text-ink-muted">◉</Text>
+          <Text className="text-sm text-ink-muted">◉</Text>
           <Text
-            className="max-w-[180px] text-sm text-ink dark:text-ink-inverse"
+            className="max-w-[180px] text-sm font-medium text-ink dark:text-ink-inverse"
             numberOfLines={1}
           >
             {label}
@@ -53,11 +39,17 @@ function AppHeader() {
         </Pressable>
         <Pressable
           onPress={() => router.push("/settings")}
-          className="rounded-full bg-surface px-3 py-2 dark:bg-surface-darkAlt"
+          className="h-11 w-11 items-center justify-center rounded-full bg-surface dark:bg-surface-darkAlt"
           accessibilityRole="button"
           accessibilityLabel={t("header.settings")}
+          hitSlop={8}
         >
-          <Text className="text-sm text-ink dark:text-ink-inverse">⚙︎</Text>
+          {/* The unicode gear renders ~10% smaller than other glyphs at the
+              same point size, so we have to oversize the font and pad the
+              line height to recenter it inside the 44pt circle. */}
+          <Text className="text-3xl leading-9 text-ink dark:text-ink-inverse">
+            ⚙︎
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -66,51 +58,40 @@ function AppHeader() {
 
 export default function TabsLayout() {
   const t = useT();
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+
   return (
     <View className="flex-1 bg-surface-alt dark:bg-surface-dark">
       <AppHeader />
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarShowLabel: false,
+          // React Navigation 7 puts each tab's content inside a "scene"
+          // container with its own default background (~#1C1C1E in dark
+          // mode), which would otherwise show through and make the body
+          // look muted-grey instead of true black. sceneStyle overrides it.
+          sceneStyle: {
+            backgroundColor: isDark ? "#000000" : "#f1f5f9",
+          },
+          // Hide the icon slot (we'd otherwise get a blank space above each
+          // label) and render labels at full tab width so "Combo" can't
+          // line-wrap to "Com / bo" on narrower iPhones.
+          tabBarIcon: () => null,
+          tabBarLabelStyle: { fontSize: 12, fontWeight: "500" },
+          tabBarItemStyle: { paddingVertical: 6 },
+          tabBarStyle: {
+            backgroundColor: isDark ? "#000000" : "#ffffff",
+            borderTopColor: isDark ? "#1e293b" : "#e2e8f0",
+          },
+          tabBarActiveTintColor: "#0284c7",
+          tabBarInactiveTintColor: isDark ? "#94a3b8" : "#64748b",
         }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: t("tabs.combo"),
-            tabBarIcon: ({ focused }) => (
-              <TabIcon label={t("tabs.combo")} focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="smhi"
-          options={{
-            title: t("tabs.smhi"),
-            tabBarIcon: ({ focused }) => (
-              <TabIcon label={t("tabs.smhi")} focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="met"
-          options={{
-            title: t("tabs.met"),
-            tabBarIcon: ({ focused }) => (
-              <TabIcon label={t("tabs.met")} focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="dmi"
-          options={{
-            title: t("tabs.dmi"),
-            tabBarIcon: ({ focused }) => (
-              <TabIcon label={t("tabs.dmi")} focused={focused} />
-            ),
-          }}
-        />
+        <Tabs.Screen name="index" options={{ title: t("tabs.combo") }} />
+        <Tabs.Screen name="smhi" options={{ title: t("tabs.smhi") }} />
+        <Tabs.Screen name="met" options={{ title: t("tabs.met") }} />
+        <Tabs.Screen name="dmi" options={{ title: t("tabs.dmi") }} />
       </Tabs>
     </View>
   );

@@ -25,8 +25,13 @@ module.exports = {
         surface: {
           DEFAULT: "#ffffff",
           alt: "#f1f5f9",
-          dark: "#0b1220",
-          darkAlt: "#111a2e",
+          // Dark theme: true black body so OLED iPhones get the deepest
+          // contrast (and free pixel-power savings), card surfaces lifted
+          // to slate-800 for clear card/body separation. Earlier passes
+          // used #0b1220 / #111a2e (too pale) then #020617 / #1e293b
+          // (better but the body still read as muddy navy on the device).
+          dark: "#000000",
+          darkAlt: "#1e293b",
         },
       },
     },
