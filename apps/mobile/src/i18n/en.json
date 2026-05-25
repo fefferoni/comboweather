@@ -49,6 +49,10 @@
     "forecastUnavailable": {
       "title": "Forecast unavailable"
     },
+    "providerUnavailable": {
+      "title": "{{provider}} unavailable",
+      "message": "No fresh data from {{provider}} right now. The other providers may still have it on the Combo tab. Pull to refresh, or try again in a moment."
+    },
     "searchUnavailable": "Search unavailable. Try again."
   },
   "location": {
