@@ -171,7 +171,7 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
       ) : isLoading || !screen.current ? (
         <View className="items-center py-16">
           <ActivityIndicator />
-          <Text className="mt-2 text-sm text-ink-muted">
+          <Text className="mt-2 text-sm text-ink-muted dark:text-ink-mutedDark">
             {locationStatus.kind === "requesting"
               ? t("common.findingLocation")
               : t("common.loading")}
@@ -192,7 +192,7 @@ export function ForecastScreen({ variant }: { variant: Variant }) {
             <SpreadDetail providers={query.data.providers} />
           ) : null}
           {screen.days.length === 0 ? (
-            <Text className="text-sm text-ink-muted">
+            <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">
               {t("forecast.noDaily")}
             </Text>
           ) : (
@@ -255,7 +255,7 @@ function ErrorState({
       <Text className="text-base font-semibold text-ink dark:text-ink-inverse">
         {title}
       </Text>
-      <Text className="text-center text-sm text-ink-muted">{message}</Text>
+      <Text className="text-center text-sm text-ink-muted dark:text-ink-mutedDark">{message}</Text>
       <Pressable
         onPress={onRetry}
         className="mt-2 rounded-full bg-sky-600 px-4 py-2"

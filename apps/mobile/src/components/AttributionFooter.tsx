@@ -12,7 +12,7 @@ export function AttributionFooter({
   if (provider === "combo") {
     return (
       <View className="mt-2 items-center">
-        <Text className="text-xs text-ink-muted">
+        <Text className="text-xs text-ink-muted dark:text-ink-mutedDark">
           Data: SMHI · MET Norway · DMI
         </Text>
       </View>
@@ -23,8 +23,9 @@ export function AttributionFooter({
     <Pressable
       onPress={() => Linking.openURL(href).catch(() => undefined)}
       className="mt-2 items-center"
+      accessibilityRole="link"
     >
-      <Text className="text-xs text-ink-muted underline">
+      <Text className="text-xs text-sky-600 underline dark:text-sky-400">
         Data from {providerLabel[provider]} · terms of use
       </Text>
     </Pressable>

@@ -25,7 +25,7 @@ export function DayCard({
             <ConfidenceChip confidence={confidence} compact />
           ) : null}
         </View>
-        <Text className="mt-1 text-xs text-ink-muted">
+        <Text className="mt-1 text-xs text-ink-muted dark:text-ink-mutedDark">
           {formatPrecip(day.precipitation.amount)}
           {prob ? ` · ${prob}` : ""}
         </Text>
@@ -36,7 +36,7 @@ export function DayCard({
           <Text className="text-base font-medium text-ink dark:text-ink-inverse">
             {formatTemp(day.tempMax)}
           </Text>
-          <Text className="text-sm text-ink-muted">{formatTemp(day.tempMin)}</Text>
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">{formatTemp(day.tempMin)}</Text>
         </View>
       </View>
     </View>

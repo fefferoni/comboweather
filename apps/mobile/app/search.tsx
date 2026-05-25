@@ -113,7 +113,7 @@ export default function SearchScreen() {
 
             {items.length > 0 ? (
               <>
-                <Text className="mt-2 text-xs uppercase tracking-wider text-ink-muted">
+                <Text className="mt-2 text-xs uppercase tracking-wider text-ink-muted dark:text-ink-mutedDark">
                   {t("location.favorites")}
                 </Text>
                 {items.map((fav) => (
@@ -132,7 +132,7 @@ export default function SearchScreen() {
             ) : null}
           </>
         ) : tooShort ? (
-          <Text className="text-sm text-ink-muted">
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">
             {t("location.minQuery")}
           </Text>
         ) : search.isLoading ? (
@@ -140,11 +140,11 @@ export default function SearchScreen() {
             <ActivityIndicator />
           </View>
         ) : search.isError ? (
-          <Text className="text-sm text-ink-muted">
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">
             {t("errors.searchUnavailable")}
           </Text>
         ) : sortedResults.length === 0 ? (
-          <Text className="text-sm text-ink-muted">
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">
             {t("location.noResults")}
           </Text>
         ) : (
@@ -158,7 +158,7 @@ export default function SearchScreen() {
               <Text className="text-base font-medium text-ink dark:text-ink-inverse">
                 {result.name}
               </Text>
-              <Text className="mt-1 text-xs text-ink-muted" numberOfLines={2}>
+              <Text className="mt-1 text-xs text-ink-muted dark:text-ink-mutedDark" numberOfLines={2}>
                 {result.displayName}
               </Text>
             </Pressable>
@@ -195,7 +195,7 @@ function FavoriteRow({
               {favorite.name}
             </Text>
             {favorite.displayName ? (
-              <Text className="mt-1 text-xs text-ink-muted" numberOfLines={1}>
+              <Text className="mt-1 text-xs text-ink-muted dark:text-ink-mutedDark" numberOfLines={1}>
                 {favorite.displayName}
               </Text>
             ) : null}
@@ -211,7 +211,7 @@ function FavoriteRow({
         accessibilityRole="button"
         accessibilityLabel={removeLabel}
       >
-        <Text className="text-xs text-ink-muted">×</Text>
+        <Text className="text-xs text-ink-muted dark:text-ink-mutedDark">×</Text>
       </Pressable>
     </View>
   );

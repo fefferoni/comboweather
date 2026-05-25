@@ -33,7 +33,10 @@ export function ConfidenceChip({
   const Wrap = onPress ? Pressable : View;
   return (
     <Wrap
-      className="flex-row items-center gap-2 self-start rounded-full bg-surface-alt px-3 py-1 dark:bg-surface-darkAlt"
+      // Chip is rendered inside cards (Hero, DayCard) which are themselves
+      // surface-darkAlt in dark mode. Use a lighter slate so the chip lifts
+      // off the card surface instead of vanishing into it.
+      className="flex-row items-center gap-2 self-start rounded-full bg-surface-alt px-3 py-1 dark:bg-slate-700"
       {...(onPress ? { onPress, accessibilityRole: "button" } : {})}
     >
       <View className={`h-2 w-2 rounded-full ${dot}`} />

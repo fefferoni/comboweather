@@ -29,7 +29,7 @@ function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel={t("header.location")}
         >
-          <Text className="text-sm text-ink-muted">◉</Text>
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">◉</Text>
           <Text
             className="max-w-[180px] text-sm font-medium text-ink dark:text-ink-inverse"
             numberOfLines={1}

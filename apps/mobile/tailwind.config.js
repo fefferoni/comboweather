@@ -19,7 +19,11 @@ module.exports = {
         ink: {
           DEFAULT: "#0f172a",
           soft: "#334155",
+          // muted reads at ~3.5:1 on the dark-mode card surface (#1e293b),
+          // below WCAG AA — pair it with `dark:text-ink-mutedDark` (slate-400,
+          // ~5.5:1) for any text that's expected to be subtle but legible.
           muted: "#64748b",
+          mutedDark: "#94a3b8",
           inverse: "#f8fafc",
         },
         surface: {

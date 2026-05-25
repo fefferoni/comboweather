@@ -84,10 +84,10 @@ export default function HourlyDrillDownScreen() {
         {query.isLoading || !query.data ? (
           <View className="items-center py-12">
             <ActivityIndicator />
-            <Text className="mt-2 text-sm text-ink-muted">{t("common.loading")}</Text>
+            <Text className="mt-2 text-sm text-ink-muted dark:text-ink-mutedDark">{t("common.loading")}</Text>
           </View>
         ) : hours.length === 0 ? (
-          <Text className="px-1 text-sm text-ink-muted">
+          <Text className="px-1 text-sm text-ink-muted dark:text-ink-mutedDark">
             {t("forecast.noDaily")}
           </Text>
         ) : (
@@ -115,10 +115,10 @@ function HourRow({
         {formatTemp(hour.temperature)}
       </Text>
       <View className="w-20 items-end">
-        <Text className="text-xs text-ink-muted">
+        <Text className="text-xs text-ink-muted dark:text-ink-mutedDark">
           {formatPrecip(hour.precipitation.amount)}
         </Text>
-        <Text className="text-xs text-ink-muted">
+        <Text className="text-xs text-ink-muted dark:text-ink-mutedDark">
           {fmt.wind(hour.wind.speed)} {formatWindDirection(hour.wind.direction)}
         </Text>
       </View>
