@@ -5,7 +5,7 @@ import Constants from "expo-constants";
 import { useT } from "../src/i18n";
 
 const VERSION =
-  Constants.expoConfig?.version ?? Constants.expoVersion ?? "0.4.0";
+  Constants.expoConfig?.version ?? Constants.expoVersion ?? "0.5.0";
 
 const LINKS = {
   smhi: "https://opendata.smhi.se/",
@@ -13,6 +13,7 @@ const LINKS = {
   dmi: "https://www.dmi.dk/frie-data",
   nominatim: "https://operations.osmfoundation.org/policies/nominatim/",
   repo: "https://github.com/fefferoni/comboweather",
+  privacy: "https://fefferoni.github.io/comboweather/privacy/",
 };
 
 export default function AboutScreen() {
@@ -43,22 +44,29 @@ export default function AboutScreen() {
           <Text className="text-xl font-semibold text-ink dark:text-ink-inverse">
             ComboWeather
           </Text>
-          <Text className="mt-1 text-sm text-ink-muted">
+          <Text className="mt-1 text-sm text-ink-muted dark:text-ink-mutedDark">
             {t("about.tagline")}
           </Text>
-          <Text className="mt-3 text-xs text-ink-muted">
+          <Text className="mt-3 text-xs text-ink-muted dark:text-ink-mutedDark">
             {t("about.version", { version: VERSION })}
           </Text>
         </View>
 
         <View className="gap-2">
-          <Text className="text-xs uppercase tracking-wider text-ink-muted">
+          <Text className="text-xs uppercase tracking-wider text-ink-muted dark:text-ink-mutedDark">
             {t("about.dataSources")}
           </Text>
           <AttributionRow text={t("about.smhi")} url={LINKS.smhi} />
           <AttributionRow text={t("about.met")} url={LINKS.met} />
           <AttributionRow text={t("about.dmi")} url={LINKS.dmi} />
           <AttributionRow text={t("about.geocoder")} url={LINKS.nominatim} />
+        </View>
+
+        <View className="gap-2">
+          <Text className="text-xs uppercase tracking-wider text-ink-muted dark:text-ink-mutedDark">
+            {t("about.legal")}
+          </Text>
+          <AttributionRow text={t("about.privacy")} url={LINKS.privacy} />
         </View>
       </ScrollView>
     </SafeAreaView>

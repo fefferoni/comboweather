@@ -20,8 +20,8 @@ export function SpreadDetail({
     );
 
   return (
-    <View className="mt-2 rounded-2xl bg-surface-alt p-4 dark:bg-surface-dark">
-      <Text className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+    <View className="mt-2 rounded-2xl bg-surface-alt p-4 dark:bg-surface-darkAlt">
+      <Text className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-mutedDark">
         {t("forecast.providersDisagree")}
       </Text>
       {rows.map(({ id, data }) => (

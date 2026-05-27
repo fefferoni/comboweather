@@ -89,7 +89,9 @@
     "met": "Meteorologisk institutt (MET Norway / Yr.no) — CC-BY 4.0.",
     "dmi": "Danmarks Meteorologiske Institut (DMI) — free data license, attribution required.",
     "geocoder": "Search powered by OpenStreetMap Nominatim.",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "legal": "Legal",
+    "privacy": "Privacy policy"
   },
   "header": {
     "location": "Location",

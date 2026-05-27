@@ -77,12 +77,12 @@ export default function WeekScreen() {
         {query.isLoading || !query.data ? (
           <View className="items-center py-12">
             <ActivityIndicator />
-            <Text className="mt-2 text-sm text-ink-muted">
+            <Text className="mt-2 text-sm text-ink-muted dark:text-ink-mutedDark">
               {t("common.loading")}
             </Text>
           </View>
         ) : days.length === 0 ? (
-          <Text className="text-sm text-ink-muted">{t("forecast.noDaily")}</Text>
+          <Text className="text-sm text-ink-muted dark:text-ink-mutedDark">{t("forecast.noDaily")}</Text>
         ) : (
           days.map((row) => (
             <Pressable

@@ -1,12 +1,15 @@
 import type React from "react";
-import Svg, { Circle, G, Path, Polyline, Rect } from "react-native-svg";
+import { useId } from "react";
+import Svg, { Circle, Defs, G, Mask, Path, Polyline, Rect } from "react-native-svg";
 import { View } from "react-native";
 
 // Inline SVG glyphs covering MET Norway's symbol_code vocabulary. Visual
 // language follows MET's icon set (sun/moon over clouds, raindrop = rain,
 // snowflake = snow, bolt = thunder) without lifting the exact assets. Bundled
 // inline so there's no Metro transformer config and the icons travel with the
-// JS bundle for free. Refining toward the literal MET SVGs is a v0.5 polish.
+// JS bundle for free. Importing MET's literal SVGs was considered for v0.5 and
+// declined — the toolchain cost (Metro SVG transformer, ~250 KB asset bundle,
+// 3-state day/night/polartwilight resolution) outweighs the visual delta.
 
 type Suffix = "day" | "night" | "polartwilight";
 
@@ -71,17 +74,35 @@ function Sun({ size, cx = 0.32, cy = 0.32, r = 0.16 }: GlyphProps & { cx?: numbe
 }
 
 function Moon({ size, cx = 0.34, cy = 0.32, r = 0.16 }: GlyphProps & { cx?: number; cy?: number; r?: number }) {
+  // Crescent drawn via SVG <Mask>: a white rect (visible) with a black
+  // offset circle (hidden) carves a true silhouette out of the moon body.
+  // Earlier implementation overlaid a hard-coded dark navy circle on top of
+  // the moon body to fake the carve — that only "blended" on dark surfaces
+  // and rendered as a yin-yang shape on light cards. Mask is background-
+  // agnostic.
+  const maskId = useId();
   const cxPx = cx * size;
   const cyPx = cy * size;
   const rPx = r * size;
   return (
     <G>
-      <Circle cx={cxPx} cy={cyPx} r={rPx} fill={COLORS.moonBody} />
+      <Defs>
+        <Mask id={maskId}>
+          <Rect x={0} y={0} width={size} height={size} fill="white" />
+          <Circle
+            cx={cxPx + rPx * 0.45}
+            cy={cyPx - rPx * 0.2}
+            r={rPx * 0.85}
+            fill="black"
+          />
+        </Mask>
+      </Defs>
       <Circle
-        cx={cxPx + rPx * 0.45}
-        cy={cyPx - rPx * 0.2}
-        r={rPx * 0.85}
-        fill="#0b1220"
+        cx={cxPx}
+        cy={cyPx}
+        r={rPx}
+        fill={COLORS.moonBody}
+        mask={`url(#${maskId})`}
       />
     </G>
   );
@@ -193,7 +214,10 @@ function dropsBeneathCloud(size: number, count: number, kind: DropKind) {
 
 function renderSymbol(symbol: string, size: number): React.ReactElement {
   const { root, suffix } = rootAndSuffix(symbol);
-  const isNight = suffix === "night";
+  // Polar twilight is the "blue hour" between day and night at high
+  // latitudes — sun is just below horizon. Visually closer to night than
+  // day; render with the moon so the icon vocabulary matches MET's intent.
+  const isNight = suffix === "night" || suffix === "polartwilight";
   const Body = isNight ? Moon : Sun;
   const intensity = root.startsWith("heavy")
     ? "heavy"

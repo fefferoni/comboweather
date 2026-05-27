@@ -25,7 +25,7 @@ export function HeroCurrent({
             {formatTemp(current.temperature)}
           </Text>
           {current.feelsLike !== undefined ? (
-            <Text className="mt-1 text-sm text-ink-muted">
+            <Text className="mt-1 text-sm text-ink-muted dark:text-ink-mutedDark">
               {t("forecast.feelsLike", { value: formatTemp(current.feelsLike) })}
             </Text>
           ) : null}
@@ -53,8 +53,11 @@ export function HeroCurrent({
 }
 
 function Pill({ text }: { text: string }) {
+  // Pill sits inside the hero card. In dark mode the card surface is
+  // surface-darkAlt (#1e293b), so the pill needs a *lighter* shade
+  // (slate-700, #334155) to read as a raised chip rather than a hole.
   return (
-    <View className="rounded-full bg-surface-alt px-3 py-1 dark:bg-surface-dark">
+    <View className="rounded-full bg-surface-alt px-3 py-1 dark:bg-slate-700">
       <Text className="text-xs font-medium text-ink-soft dark:text-ink-inverse">
         {text}
       </Text>
