@@ -33,10 +33,11 @@ export function ConfidenceChip({
   const Wrap = onPress ? Pressable : View;
   return (
     <Wrap
-      // Chip is rendered inside cards (Hero, DayCard) which are themselves
-      // surface-darkAlt in dark mode. Use a lighter slate so the chip lifts
-      // off the card surface instead of vanishing into it.
-      className="flex-row items-center gap-2 self-start rounded-full bg-surface-alt px-3 py-1 dark:bg-slate-700"
+      // Chip is rendered inside cards (Hero, DayCard) which are white in
+      // light mode and surface-darkAlt (#1e293b) in dark mode. Match the
+      // HeroCurrent pill lift exactly — slate-200 light / slate-600 dark —
+      // so the chip reads as a distinct raised element in both themes.
+      className="flex-row items-center gap-2 self-start rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-600"
       {...(onPress ? { onPress, accessibilityRole: "button" } : {})}
     >
       <View className={`h-2 w-2 rounded-full ${dot}`} />

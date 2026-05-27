@@ -53,11 +53,13 @@ export function HeroCurrent({
 }
 
 function Pill({ text }: { text: string }) {
-  // Pill sits inside the hero card. In dark mode the card surface is
-  // surface-darkAlt (#1e293b), so the pill needs a *lighter* shade
-  // (slate-700, #334155) to read as a raised chip rather than a hole.
+  // Pill sits inside the hero card. It needs to read as a raised chip, so
+  // it must be a clearly distinct shade from the card surface in BOTH
+  // themes: slate-200 (#e2e8f0) on the white light card, slate-600
+  // (#475569) on the surface-darkAlt (#1e293b) dark card. A single-step
+  // lift (slate-700 on slate-800) was too subtle to register on-device.
   return (
-    <View className="rounded-full bg-surface-alt px-3 py-1 dark:bg-slate-700">
+    <View className="rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-600">
       <Text className="text-xs font-medium text-ink-soft dark:text-ink-inverse">
         {text}
       </Text>
