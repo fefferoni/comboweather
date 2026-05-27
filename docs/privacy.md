@@ -1,5 +1,6 @@
 ---
 title: Privacy policy
+permalink: /privacy/
 ---
 
 # ComboWeather privacy policy
