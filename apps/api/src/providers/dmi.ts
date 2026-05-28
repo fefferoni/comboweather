@@ -69,11 +69,27 @@ export interface DmiCoverage {
   ranges: Partial<Record<DmiParameter, DmiNdArray>>;
 }
 
-/** Fetch DMI's Harmonie point forecast. Keyless; throws on non-2xx. */
+// Delays between retry attempts for transient DMI failures. DMI's free
+// API frequently returns 429 ("Server is busy") under load — single calls
+// have ~80% success in practice, two retries lifts that to ~99%. Status
+// 4xx (non-429) skips retries because those signal a bad request, not
+// overload — retrying wouldn't change the outcome.
+const RETRY_DELAYS_MS = [250, 500];
+
+function isTransient(status: number): boolean {
+  return status === 429 || (status >= 500 && status <= 599);
+}
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Fetch DMI's Harmonie point forecast. Keyless. Retries up to 2× on 429/5xx
+ *  before giving up; throws on persistent failure or any 4xx (non-429). */
 export async function fetchDmi(
   lat: number,
   lon: number,
-  init?: { fetch?: typeof fetch },
+  init?: { fetch?: typeof fetch; sleep?: (ms: number) => Promise<void> },
 ): Promise<DmiCoverage> {
   const coords = `POINT(${roundCoord(lon).toFixed(2)} ${roundCoord(lat).toFixed(2)})`;
   const params = new URLSearchParams({
@@ -84,16 +100,32 @@ export async function fetchDmi(
   });
   const url = `${DMI_BASE}?${params.toString()}`;
   const fetchImpl = init?.fetch ?? fetch;
-  const res = await fetchImpl(url, {
-    headers: {
-      "User-Agent": "ComboWeather/0.2 (+https://github.com/fefferoni/comboweather)",
-      Accept: "application/json",
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`DMI fetch failed: ${res.status} ${res.statusText}`);
+  const sleep = init?.sleep ?? defaultSleep;
+
+  let lastStatus = 0;
+  let lastStatusText = "";
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RETRY_DELAYS_MS[attempt - 1]!);
+    }
+    const res = await fetchImpl(url, {
+      headers: {
+        "User-Agent": "ComboWeather/0.5 (+https://github.com/fefferoni/comboweather)",
+        Accept: "application/json",
+      },
+    });
+    if (res.ok) {
+      return (await res.json()) as DmiCoverage;
+    }
+    lastStatus = res.status;
+    lastStatusText = res.statusText;
+    if (!isTransient(res.status)) {
+      throw new Error(`DMI fetch failed: ${res.status} ${res.statusText}`);
+    }
   }
-  return (await res.json()) as DmiCoverage;
+  throw new Error(
+    `DMI fetch failed after ${RETRY_DELAYS_MS.length + 1} attempts: ${lastStatus} ${lastStatusText}`,
+  );
 }
 
 /** Convert a DMI Coverage into the canonical ProviderForecast. */
