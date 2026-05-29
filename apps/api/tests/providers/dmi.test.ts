@@ -142,11 +142,57 @@ describe("fetchDmi", () => {
     expect(capturedUrl).not.toContain("api-key");
   });
 
-  it("throws when DMI responds with a non-2xx status", async () => {
-    const fakeFetch = (async () =>
-      new Response("nope", { status: 503, statusText: "Service Unavailable" })) as unknown as typeof fetch;
+  it("throws immediately on a non-retryable 4xx (e.g. 400 Bad Request)", async () => {
+    let calls = 0;
+    const fakeFetch = (async () => {
+      calls += 1;
+      return new Response("nope", { status: 400, statusText: "Bad Request" });
+    }) as unknown as typeof fetch;
     await expect(
-      fetchDmi(55.68, 12.57, { fetch: fakeFetch }),
-    ).rejects.toThrow(/DMI fetch failed: 503/);
+      fetchDmi(55.68, 12.57, { fetch: fakeFetch, sleep: async () => {} }),
+    ).rejects.toThrow(/DMI fetch failed: 400/);
+    // 4xx (non-429) is a bad-request signal — retrying wouldn't change anything.
+    expect(calls).toBe(1);
+  });
+
+  it("retries on 429 and succeeds on a later attempt", async () => {
+    let calls = 0;
+    const fakeFetch = (async () => {
+      calls += 1;
+      if (calls < 3) {
+        return new Response("busy", { status: 429, statusText: "Too Many Requests" });
+      }
+      return new Response(JSON.stringify(fixture), { status: 200 });
+    }) as unknown as typeof fetch;
+    const out = await fetchDmi(55.68, 12.57, { fetch: fakeFetch, sleep: async () => {} });
+    expect(out).toBeDefined();
+    expect(calls).toBe(3);
+  });
+
+  it("retries on 5xx and succeeds on a later attempt", async () => {
+    let calls = 0;
+    const fakeFetch = (async () => {
+      calls += 1;
+      if (calls < 2) {
+        return new Response("err", { status: 503, statusText: "Service Unavailable" });
+      }
+      return new Response(JSON.stringify(fixture), { status: 200 });
+    }) as unknown as typeof fetch;
+    const out = await fetchDmi(55.68, 12.57, { fetch: fakeFetch, sleep: async () => {} });
+    expect(out).toBeDefined();
+    expect(calls).toBe(2);
+  });
+
+  it("gives up after the configured retries and throws", async () => {
+    let calls = 0;
+    const fakeFetch = (async () => {
+      calls += 1;
+      return new Response("busy", { status: 429, statusText: "Too Many Requests" });
+    }) as unknown as typeof fetch;
+    await expect(
+      fetchDmi(55.68, 12.57, { fetch: fakeFetch, sleep: async () => {} }),
+    ).rejects.toThrow(/after 3 attempts: 429/);
+    // 1 initial + 2 retries = 3 total calls.
+    expect(calls).toBe(3);
   });
 });
